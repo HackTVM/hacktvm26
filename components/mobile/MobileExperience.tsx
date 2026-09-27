@@ -15,9 +15,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BlobMorph } from "@/components/BlobMorph";
+import { BlobMorph, type KeyVisualRect } from "@/components/BlobMorph";
 import { BlobStage } from "@/components/BlobStage";
 import { KeyHitArea } from "@/components/KeyHitArea";
+import { KeycapGlow } from "@/components/KeycapGlow";
 import { MobileBeatPanel } from "@/components/mobile/MobileBeatPanel";
 import { MobileScrollCue } from "@/components/mobile/MobileScrollCue";
 import { BEATS, spacerHeight } from "@/lib/mobile-beats";
@@ -44,6 +45,10 @@ export function MobileExperience() {
   const [beatIndex, setBeatIndex] = useState(0);
   const [blobProgress, setBlobProgress] = useState(0);
   const [hasScrolled, setHasScrolled] = useState(false);
+
+  /* The resolved keycap's box, published once by BlobMorph's silhouette
+     pipeline — KeycapGlow's ambient spill is positioned from it. */
+  const [keyRect, setKeyRect] = useState<KeyVisualRect | null>(null);
 
   const measure = useCallback(() => {
     const el = scrollerRef.current;
@@ -112,9 +117,11 @@ export function MobileExperience() {
       {/* Aurora brand background — identical on every beat. */}
       <AuroraBackground />
 
-      {/* Top-half blob stage (positioned via .mobile-stage) */}
+      {/* Top-half blob stage (positioned via .mobile-stage). The spill renders
+          before the svg so it composites behind the key, in the same cell. */}
       <BlobStage className="mobile-stage">
-        <BlobMorph progress={effectiveProgress} />
+        <KeycapGlow progress={effectiveProgress} rect={keyRect} />
+        <BlobMorph progress={effectiveProgress} onKeyRect={setKeyRect} />
         <KeyHitArea progress={effectiveProgress} />
       </BlobStage>
 

@@ -791,6 +791,116 @@ body::after {
   }
 }
 
+/* ---------- Keycap chromatic bleed ----------
+   The resolved "H" keycap's light spill: two blurred copies of the keycap's
+   alpha, tinted violet and blue, screened additively and offset past opposite
+   edges (bottom-left / top-right) so the light escapes the silhouette instead
+   of ringing it. Mounted by components/KeycapGlow.tsx, which positions the
+   layers from the rect BlobMorph publishes for its own <image>.
+
+   Everything here is STATIC except `transform`, which is the single property
+   the driver animates. Because a filter's result is rastered into the layer's
+   own texture, translating that layer never re-runs the blur.
+
+   Tunables arrive as custom properties so the px values stay in TypeScript
+   (and get scaled for the smaller mobile blob there):
+     --glow-mask  the keycap PNG, used as the alpha mask for both tints
+     --glow-blur  blur radius (Gaussian sigma), px
+     --glow-bleed headroom each layer is inflated by, px (must exceed the
+                  blur's ~2.4 sigma reach, or the spill gets a straight cut)
+   Per layer, from the same component:
+     --glow-base-x/-y  resting offset past its edge, px
+     --glow-amp        ambient drift amplitude, px
+     --glow-dur/-delay ambient drift period / phase offset
+   -------------------------------------------------------------------------- */
+.keycap-glow-spill {
+  position: absolute;
+  /* Inflated past the keycap box by the bleed headroom, so the blur has room
+     to spread — a filter's result is clipped to its own border box. */
+  inset: calc(var(--glow-bleed, 48px) * -1);
+  filter: blur(var(--glow-blur, 20px));
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+
+/* plus-lighter sums the two spills properly where it exists; screen is the
+   fallback (identical here — both layers are additive over near-black). */
+@supports (mix-blend-mode: plus-lighter) {
+  .keycap-glow-spill {
+    mix-blend-mode: plus-lighter;
+  }
+}
+
+.keycap-glow-violet {
+  --glow-tint: #603db6;
+}
+
+.keycap-glow-blue {
+  --glow-tint: #4b7cd3;
+}
+
+/* The tint: flat colour clipped to the keycap's own alpha, meet-fitted into
+   this box exactly as the SVG <image> is (object-fit/xMidYMid meet). The inset
+   cancels the spill's inflation, landing it precisely on the keycap's box. */
+.keycap-glow-tint {
+  position: absolute;
+  inset: var(--glow-bleed, 48px);
+  background-color: var(--glow-tint);
+  -webkit-mask-image: var(--glow-mask);
+  mask-image: var(--glow-mask);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* Coarse-pointer / reduced-motion driver: the transform is handed entirely to
+   the compositor. Two layers, two periods (7s / 9s) and a phase offset between
+   them, so the violet and blue never fall into step. */
+.keycap-glow-drift {
+  animation: keycap-glow-drift var(--glow-dur, 7s) ease-in-out var(--glow-delay, 0s) infinite alternate;
+}
+
+@keyframes keycap-glow-drift {
+  0% {
+    transform: translate3d(var(--glow-base-x, 0px), var(--glow-base-y, 0px), 0);
+  }
+  25% {
+    transform: translate3d(
+      calc(var(--glow-base-x, 0px) + var(--glow-amp, 8px) * 0.8),
+      calc(var(--glow-base-y, 0px) - var(--glow-amp, 8px) * 0.5),
+      0
+    );
+  }
+  50% {
+    transform: translate3d(
+      calc(var(--glow-base-x, 0px) + var(--glow-amp, 8px) * 0.2),
+      calc(var(--glow-base-y, 0px) - var(--glow-amp, 8px)),
+      0
+    );
+  }
+  75% {
+    transform: translate3d(
+      calc(var(--glow-base-x, 0px) - var(--glow-amp, 8px) * 0.6),
+      calc(var(--glow-base-y, 0px) - var(--glow-amp, 8px) * 0.3),
+      0
+    );
+  }
+  100% {
+    transform: translate3d(var(--glow-base-x, 0px), var(--glow-base-y, 0px), 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .keycap-glow-drift {
+    animation: none;
+    /* Hold the resting edge offset so the bleed still reads, minus the drift. */
+    transform: translate3d(var(--glow-base-x, 0px), var(--glow-base-y, 0px), 0);
+  }
+}
+
 /* ---------- Screen Reader Only ---------- */
 .sr-only {
   position: absolute;

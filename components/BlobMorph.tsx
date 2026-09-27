@@ -150,6 +150,21 @@ export const KEY_RIGID_PROGRESS = 0.97;   // detail fully visible, tilt interact
    center. Markup/style only — never physics. */
 export const KEY_VISUAL_ID = "key-visual";
 
+/* Box of the resolved keycap <image>, in the 200-unit viewBox space of the SVG
+   below. Published upward by BlobMorph so sibling HTML layers (KeycapGlow's
+   chromatic bleed) can be positioned over the key WITHOUT re-deriving the
+   silhouette pipeline or hardcoding the calibration: divide by 200 and you have
+   percentages of the --blob-size box the SVG renders into. */
+export interface KeyVisualRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** ViewBox edge length the KeyVisualRect coordinates are expressed in. */
+export const KEY_VIEWBOX_UNITS = 200;
+
 /* --- Blob mesh gradient (visual layer only) ------------------------------
    A soft mesh-like color field clipped to the blob silhouette (via <use>
    of the physics-written core path — no loop changes). It drifts slowly
@@ -309,9 +324,17 @@ interface KeyImagePlacement {
 
 interface BlobMorphProps {
   progress?: number;
+  /**
+   * Fired once, with the resolved keycap's box in viewBox units, as soon as the
+   * silhouette pipeline has produced it. The crisp <image> is mounted in the
+   * same commit, so anything positioned from this rect lines up with the key by
+   * construction. The latest callback is read through a ref, so passing a fresh
+   * inline arrow does not re-run the asset load.
+   */
+  onKeyRect?: (rect: KeyVisualRect) => void;
 }
 
-export function BlobMorph({ progress = 0 }: BlobMorphProps) {
+export function BlobMorph({ progress = 0, onKeyRect }: BlobMorphProps) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   const corePathRef = useRef<SVGPathElement>(null);
@@ -411,6 +434,11 @@ export function BlobMorph({ progress = 0 }: BlobMorphProps) {
     y: -9999,
     active: false,
   });
+
+  const onKeyRectRef = useRef(onKeyRect);
+  useEffect(() => {
+    onKeyRectRef.current = onKeyRect;
+  }, [onKeyRect]);
 
   useEffect(() => {
     let cancelled = false;
@@ -512,6 +540,14 @@ export function BlobMorph({ progress = 0 }: BlobMorphProps) {
             height: drawH * scale * KEY_COVER_SCALE,
           };
           setKeyImageReady(true);
+          /* Publish the same box the <image> below is drawn with (offsets
+             included) so sibling layers can overlay the key exactly. */
+          onKeyRectRef.current?.({
+            x: keyImageRef.current.x + LOGO_OFFSET_X,
+            y: keyImageRef.current.y + LOGO_OFFSET_Y,
+            width: keyImageRef.current.width,
+            height: keyImageRef.current.height,
+          });
         };
 
         img.src = url;
