@@ -6,6 +6,7 @@ import { useApp } from "@/context/AppContext";
 import { EVENT } from "@/lib/event";
 import { KEY_HIT_AREA_ID } from "@/components/KeyHitArea";
 import { Magnetic } from "@/components/Magnetic";
+import { Mail } from "lucide-react";
 
 /**
  * HackTVM'26 — Access Point
@@ -45,6 +46,64 @@ function useIsMobile(): boolean {
   }, []);
 
   return isMobile;
+}
+
+/** Target: October 10, 2026, 8:00 AM IST (UTC+5:30) */
+const TARGET_DATE = new Date("2026-10-10T02:30:00.000Z"); // 8:00 AM IST = 02:30 UTC
+
+function Countdown() {
+  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number }>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+
+  useEffect(() => {
+    const update = () => {
+      const now = new Date();
+      const diff = TARGET_DATE.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeLeft({ days, hours, minutes, seconds });
+    };
+
+    update();
+    const interval = setInterval(update, 1000); // Update every second
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-14 text-center">
+      {[
+        { label: "Days", value: timeLeft.days },
+        { label: "Hours", value: timeLeft.hours },
+        { label: "Minutes", value: timeLeft.minutes },
+        { label: "Seconds", value: timeLeft.seconds },
+      ].map(({ label, value }) => (
+        <div key={label} className="flex flex-col items-center gap-2">
+          <span
+            className="font-mono text-6xl sm:text-7xl font-bold text-cream tabular-nums"
+            aria-label={`${value} ${label.toLowerCase()}`}
+          >
+            {String(value).padStart(2, "0")}
+          </span>
+          <span className="font-mono text-sm uppercase tracking-[0.2em] text-gray-mid">
+            {label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export function KeyModal() {
@@ -190,8 +249,7 @@ export function KeyModal() {
               className={[
                 "pointer-events-auto relative flex flex-col overflow-hidden",
                 "h-svh w-full sm:h-[min(86dvh,760px)] sm:w-[min(92vw,1100px)]",
-                "rounded-t-3xl sm:rounded-3xl",
-                "border border-white/10 bg-black",
+                "border border-black bg-black",
               ].join(" ")}
             >
               <Magnetic
@@ -204,8 +262,8 @@ export function KeyModal() {
                 <button
                   type="button"
                   onClick={handleClose}
-                  aria-label="Close registration details"
-                  className="glow-press flex h-11 w-11 items-center justify-center rounded-full border border-white/15 text-cream transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream"
+                  aria-label="Close"
+                  className="glow-press flex h-11 w-11 items-center justify-center text-cream transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream"
                 >
                   <svg
                     width="16"
@@ -224,124 +282,107 @@ export function KeyModal() {
 
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 <div className="flex min-h-full flex-col justify-center px-6 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-12 sm:px-10 sm:pb-8">
-                  <div className="grid grid-cols-1 gap-x-12 gap-y-10 md:grid-cols-2">
-                    {/* Left: heading, tagline, date, register, contact */}
-                    <div className="flex flex-col gap-5">
-                      <div>
-                        <h2
-                          id="key-modal-title"
-                          className="pr-14 font-mono text-2xl font-bold leading-tight text-cream sm:text-3xl"
-                        >
-                          {EVENT.fullName}
-                        </h2>
-                        <p className="mt-2 font-mono text-sm uppercase tracking-wide text-blue">
-                          {EVENT.tagline}
-                        </p>
-                      </div>
+                  {/* Row 1 — Countdown */}
+                  <section aria-labelledby="countdown-heading" className="w-full pb-16">
+                    <h3 id="countdown-heading" className="sr-only">
+                      Countdown to HackTVM'26
+                    </h3>
+                    <Countdown />
+                  </section>
 
-                      {/* Slot above the action buttons — swap for a countdown later. */}
-                      <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                        <p className="text-sm text-gray-light">
-                          {EVENT.eventLabel} · {EVENT.venue}
-                        </p>
-                      </div>
-
-                      {EVENT.register.enabled ? (
-                        <Magnetic
-                          className="mt-1 block w-full sm:w-fit"
-                          pull={6}
-                          glow={18}
-                          radius={90}
-                          borderRadius="9999px"
-                        >
-                          <a
-                            href={EVENT.register.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="glow-press block w-full rounded-full bg-cream py-3 text-center font-mono text-sm font-bold text-black transition hover:opacity-90 active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream sm:px-10"
-                          >
-                            {EVENT.register.label}
-                          </a>
-                        </Magnetic>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled
-                          className="mt-1 block w-full cursor-not-allowed rounded-full bg-white/10 py-3 text-center font-mono text-sm font-bold text-gray-mid sm:w-fit sm:px-10"
-                        >
-                          {EVENT.register.label}
-                        </button>
-                      )}
-
-                      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-light">
-                        <a
-                          href={`mailto:${EVENT.contact.email}`}
-                          className="hover:text-cream focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream"
-                        >
-                          {EVENT.contact.email}
-                        </a>
-                        {EVENT.contact.socials.map((s) => (
-                          <a
-                            key={s.label}
-                            href={s.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-gray-mid hover:text-cream focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream"
-                          >
-                            {s.label}
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Right: downloads (brochure, hackbook) */}
-                    <div className="flex flex-col gap-4">
-                      <p className="font-mono text-xs uppercase tracking-[0.2em] text-gray-mid">
-                        Downloads
-                      </p>
+                  {/* Row 2 — Download buttons */}
+                  <section aria-labelledby="downloads-heading" className="mt-10 w-full">
+                    <h3 id="downloads-heading" className="sr-only">
+                      Downloads
+                    </h3>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                       <Magnetic
-                        className="block w-full"
+                        className="block w-full sm:w-fit"
                         pull={6}
-                        glow={16}
-                        radius={110}
-                        borderRadius="16px"
+                        glow={18}
+                        radius={90}
+                        borderRadius="0"
                       >
                         <a
                           href={EVENT.brochure.path}
                           download
-                          className="glow-press group flex w-full items-center justify-between gap-4 rounded-2xl border border-white/15 bg-white/5 px-5 py-4 transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream"
+                          className="glow-press block w-full bg-cream py-3 text-center font-mono text-sm font-bold text-black active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream sm:px-10"
                         >
-                          <span className="font-mono text-sm font-semibold text-cream">
-                            {EVENT.brochure.label}
-                          </span>
-                          <span className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.15em] text-gray-mid transition group-hover:text-cream">
-                            PDF
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 16 16"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              aria-hidden="true"
-                            >
-                              <path d="M8 2v9M4 7l4 4 4-4M2 13h12" />
-                            </svg>
-                          </span>
+                          Download Brochure
                         </a>
                       </Magnetic>
-                      <span className="relative flex w-full items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
-                        <span className="font-mono text-sm font-semibold text-gray-dim">
-                          {EVENT.hackbook.label}
-                        </span>
-                        <span className="rounded-full border border-white/15 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.15em] text-gray-mid">
-                          {EVENT.hackbook.comingLabel}
-                        </span>
-                      </span>
+                      <button
+                        type="button"
+                        disabled
+                        className="glow-press block w-full bg-white/10 py-3 text-center font-mono text-sm font-bold text-gray-mid cursor-not-allowed sm:w-fit sm:px-10"
+                        aria-label="Download Hackbook (coming Oct 3)"
+                      >
+                        Download Hackbook
+                      </button>
                     </div>
-                  </div>
+                  </section>
+
+                  {/* Row 3 — Socials */}
+                  <section aria-labelledby="socials-heading" className="mt-10 w-full">
+                    <h3 id="socials-heading" className="sr-only">
+                      Social links
+                    </h3>
+                    <div className="flex items-center justify-center gap-6">
+                      <a
+                        href="mailto:hackclubtvm@gmail.com"
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="Email us"
+                        className="glow-press flex h-12 w-12 items-center justify-center border border-white/15 bg-white/5 text-gray-light transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream"
+                      >
+                        <Mail width={20} height={20} strokeWidth={1.5} aria-hidden="true" />
+                      </a>
+                      <a
+                        href="https://www.instagram.com/hacktvm/"
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="Instagram"
+                        className="glow-press flex h-12 w-12 items-center justify-center border border-white/15 bg-white/5 text-gray-light transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream"
+                      >
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                          <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                        </svg>
+                      </a>
+                      <a
+                        href="https://github.com/hackTVM"
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="GitHub"
+                        className="glow-press flex h-12 w-12 items-center justify-center border border-white/15 bg-white/5 text-gray-light transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream"
+                      >
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+                        </svg>
+                      </a>
+                    </div>
+                  </section>
                 </div>
               </div>
             </div>
