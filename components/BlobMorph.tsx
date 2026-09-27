@@ -90,7 +90,7 @@ function buildSmoothPath(points: { x: number; y: number }[]): string {
 
 // --- assets -----------------------------------------------------------
 const SILHOUETTE_SRC = "/silhouette.svg";
-const KEY_IMAGE_SRC = "/keycap.png";
+const KEY_IMAGE_SRC = "/keycap2.png";
 
 const NUM_POINTS = 32;
 const CANVAS_CENTER = 100;
@@ -184,12 +184,9 @@ const HALO_VIOLET = "#603DB6";
 const KEY_HALO_CX = 104.85;
 const KEY_HALO_CY = 96.2;
 
-/* Blue rests up-and-right of the key, violet opposite. This diagonal is both the
-   resting direction of the pair and the reference the cursor orbit rotates from,
-   so blue always leans toward the pointer and violet, being opposite, away. */
-const HALO_BLUE_DX = 11;
-const HALO_BLUE_DY = -11;
-const HALO_BLUE_REST_ANGLE = Math.atan2(HALO_BLUE_DY, HALO_BLUE_DX);
+/* Resting direction of the light: blue sits up-and-right of the key, violet
+   diametrically opposite. The cursor orbit springs away from these angles. */
+const HALO_BLUE_REST_ANGLE = Math.atan2(-1, 1); // -45deg, up-and-right
 
 /* The light is a blurred copy of the KEYCAP SILHOUETTE, not a disc. An earlier
    build filled two ellipses with radial gradients and it read as a flat
@@ -223,25 +220,32 @@ const HALO_CORE_VIOLET = 0.75;
 const HALO_SCATTER_BLUE = 0.34;
 const HALO_SCATTER_VIOLET = 0.3;
 
-/* Cursor-driven orbit, same contract the removed glow used: the offset vector is
-   only ever ROTATED about the key centre, never lengthened, so the light travels
-   around the key and its distance from the key never changes. No clamp — an
-   earlier build capped the swing and the halo froze across most of the screen,
-   reading as broken. Full range is safe because both colours ride ONE shared
-   rotation (they are rigidly grouped), which keeps them exactly opposite. */
-const HALO_EASE = 0.12;
+/* Cursor-driven light motion.
+
+   NOT a rigid rotation. Rotating the glow (especially a shape-bearing one) made
+   the keycap outline spin and the two colours swing in lockstep like a seesaw —
+   it read as an object rotating. Instead the two glow SLIDE: their centres
+   travel on a circle around the key while the shapes stay upright, so nothing
+   "spins" and the motion reads as light moving around behind the key.
+
+   The orbit angle runs through the SAME spring integrator as the blob physics
+   (velocity + stiffness + damping), so it inherits that organic momentum and
+   settle instead of a mechanical lerp. Blue springs to the cursor; violet
+   springs to the diametrically-opposite point but with LOWER stiffness, so it
+   trails blue and the pair deforms rather than moving as one rigid body. The
+   shapes' upright-ness plus the trailing opposite colour is what sells "light".
+
+   These mirror the physics effect's STIFFNESS/DAMPING (those are local to that
+   effect, hence duplicated here with matching values). */
+const HALO_ORBIT_RADIUS = 22;
+const HALO_ANG_STIFF = 0.014;
+const HALO_VIOLET_STIFF = 0.009; // trails -> non-rigid pair
+const HALO_ANG_DAMP = 0.82;
 /* Radius around the key centre (viewBox units) within which the cursor angle is
    treated as undefined and the last angle is held, so the light doesn't spin
    when the pointer is sitting on the key. Key is ~95x77 units, so this keeps the
    deadzone just inside it. */
 const HALO_DEADZONE_UNITS = 30;
-
-/* Scale about the key centre, THEN offset. The centre maps to
-   (KEY_HALO_CX + scale*dx, KEY_HALO_CY + scale*dy), so the scatter layer, having
-   the larger scale, also throws its light a little wider. */
-function haloUseTransform(scale: number, dx: number, dy: number) {
-  return `translate(${KEY_HALO_CX} ${KEY_HALO_CY}) scale(${scale}) translate(${-KEY_HALO_CX} ${-KEY_HALO_CY}) translate(${dx} ${dy})`;
-}
 
 /* --- Blob film grain (visual layer only) --------------------------------
    A single soft grain layer + a directional veil + a soft inner sheen, all
@@ -287,10 +291,10 @@ const MESH_GRAY_CIRCLES: ReadonlyArray<{
   readonly tx: number;
   readonly ty: number;
 }> = [
-  { cx: 100, cy: 100, r: 95, peak: 0.54, dur: 24, tx: 13, ty: -11 },
-  { cx: 58, cy: 132, r: 78, peak: 0.36, dur: 29, tx: -12, ty: 12 },
-  { cx: 142, cy: 58, r: 72, peak: 0.36, dur: 32, tx: 12, ty: -14 },
-];
+    { cx: 100, cy: 100, r: 95, peak: 0.54, dur: 24, tx: 13, ty: -11 },
+    { cx: 58, cy: 132, r: 78, peak: 0.36, dur: 29, tx: -12, ty: 12 },
+    { cx: 142, cy: 58, r: 72, peak: 0.36, dur: 32, tx: 12, ty: -14 },
+  ];
 /* CSS class used for the drift animation (defined in globals.css). */
 const MESH_GRAY_DRIFT_CLASS = "blob-gray-drift";
 
@@ -414,18 +418,21 @@ export function BlobMorph({ progress = 0 }: BlobMorphProps) {
      to 1) so the two are always at the same point in their fade and the light
      can never finish arriving before — or after — the key it is behind. */
   const keyHaloRef = useRef<SVGGElement>(null);
-  const haloOrbitRef = useRef<SVGGElement>(null);
+  const haloBlueRef = useRef<SVGGElement>(null);
+  const haloVioletRef = useRef<SVGGElement>(null);
   const specularShiftRef = useRef<SVGGElement>(null);
   const meshGroupRef = useRef<SVGGElement>(null);
   const logoImageRef = useRef<SVGImageElement>(null);
 
-  /* Halo orbit state. Target is null until the cursor is captured (and stays
-     null on coarse pointers / reduced motion, so the halo rests). Angle is the
-     eased current value; lastRot avoids rewriting an identical transform
-     attribute every frame. */
+  /* Halo orbit state: one spring (angle + velocity) per colour. Target is the
+     raw cursor angle in radians around the key centre, or null when there's no
+     cursor (touch / reduced motion / left the window) — then the springs ease
+     back to the resting opposed positions. */
   const haloTargetRef = useRef<number | null>(null);
-  const haloAngleRef = useRef(0);
-  const lastHaloRotRef = useRef<string | null>(null);
+  const haloBlueAngRef = useRef(HALO_BLUE_REST_ANGLE);
+  const haloBlueVelRef = useRef(0);
+  const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
+  const haloVioletVelRef = useRef(0);
 
   const targetRadiiRef = useRef<Float32Array>(generateFallbackRadii(NUM_POINTS));
   const keyImageRef = useRef<KeyImagePlacement | null>(null);
@@ -510,18 +517,15 @@ export function BlobMorph({ progress = 0 }: BlobMorphProps) {
       const ty = ny * maxCss;
       el.style.transform = `translate(${tx.toFixed(2)}px ${ty.toFixed(2)}px)`;
 
-      // Halo orbit target, from the same rect and the same mouse event. Cursor
-      // in viewBox units (viewBox is 0..200 on both axes), then the angle around
-      // the key centre. Held still inside a deadzone around the key.
+      // Halo orbit target, from the same rect and the same mouse event. The raw
+      // cursor angle (radians) around the key centre; held still inside a
+      // deadzone around the key so the light doesn't spin under the pointer.
       const vx = ((e.clientX - rect.left) / rect.width) * 200;
       const vy = ((e.clientY - rect.top) / rect.height) * 200;
       const dx = vx - KEY_HALO_CX;
       const dy = vy - KEY_HALO_CY;
       if (Math.hypot(dx, dy) > HALO_DEADZONE_UNITS) {
-        // Rotation that carries blue's rest offset onto the cursor direction.
-        const deg = (Math.atan2(dy, dx) - HALO_BLUE_REST_ANGLE) * (180 / Math.PI);
-        // Wrap to (-180, 180] so the target never teleports across the seam.
-        haloTargetRef.current = (((deg + 180) % 360) + 360) % 360 - 180;
+        haloTargetRef.current = Math.atan2(dy, dx);
       }
     };
     window.addEventListener("mousemove", apply);
@@ -804,21 +808,38 @@ export function BlobMorph({ progress = 0 }: BlobMorphProps) {
         keyHaloRef.current.style.opacity = String(detailReveal);
       }
 
-      // Ease the halo's shared rotation toward the target angle, then rotate the
-      // group once. Shortest-arc each frame so it never unwinds the long way
-      // round the seam. When there is no target (no cursor, or a coarse pointer /
-      // reduced motion where the cursor path never runs) it eases back to rest.
-      const target = haloTargetRef.current ?? 0;
-      let d = target - haloAngleRef.current;
-      d = (((d + 180) % 360) + 360) % 360 - 180;
-      haloAngleRef.current += d * HALO_EASE;
-      const deg = haloAngleRef.current.toFixed(2);
-      if (haloOrbitRef.current && deg !== lastHaloRotRef.current) {
-        lastHaloRotRef.current = deg;
-        haloOrbitRef.current.setAttribute(
-          "transform",
-          `rotate(${deg} ${KEY_HALO_CX} ${KEY_HALO_CY})`,
-        );
+      // Halo orbit. Two independent springs (same integrator shape as the blob
+      // physics) integrated on the orbit ANGLE, then each colour's centre is
+      // placed on a circle around the key — a slide, never a rotation of the
+      // shape. Blue springs to the cursor; violet springs to the opposite point
+      // with lower stiffness, so it trails and the pair deforms like light
+      // instead of moving as one rigid body. No cursor -> both ease back to rest.
+      const blueTarget =
+        haloTargetRef.current !== null ? haloTargetRef.current : HALO_BLUE_REST_ANGLE;
+      const wrapPi = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
+      // Blue -> cursor.
+      let bd = wrapPi(blueTarget - haloBlueAngRef.current);
+      haloBlueVelRef.current = (haloBlueVelRef.current + bd * HALO_ANG_STIFF) * HALO_ANG_DAMP;
+      haloBlueAngRef.current += haloBlueVelRef.current;
+      // Violet -> diametrically opposite blue, softer so it lags.
+      const violetTarget = haloBlueAngRef.current + Math.PI;
+      let vd = wrapPi(violetTarget - haloVioletAngRef.current);
+      haloVioletVelRef.current =
+        (haloVioletVelRef.current + vd * HALO_VIOLET_STIFF) * HALO_ANG_DAMP;
+      haloVioletAngRef.current += haloVioletVelRef.current;
+
+      if (haloBlueRef.current) {
+        // translate by the ORBIT OFFSET only — the <use> shapes already sit
+        // centred on the key, so the offset is all that's needed to move each
+        // colour's centre around the key.
+        const bx = Math.cos(haloBlueAngRef.current) * HALO_ORBIT_RADIUS;
+        const by = Math.sin(haloBlueAngRef.current) * HALO_ORBIT_RADIUS;
+        haloBlueRef.current.setAttribute("transform", `translate(${bx.toFixed(2)} ${by.toFixed(2)})`);
+      }
+      if (haloVioletRef.current) {
+        const vx = Math.cos(haloVioletAngRef.current) * HALO_ORBIT_RADIUS;
+        const vy = Math.sin(haloVioletAngRef.current) * HALO_ORBIT_RADIUS;
+        haloVioletRef.current.setAttribute("transform", `translate(${vx.toFixed(2)} ${vy.toFixed(2)})`);
       }
 
       rafId = requestAnimationFrame(tick);
@@ -1051,23 +1072,17 @@ export function BlobMorph({ progress = 0 }: BlobMorphProps) {
           four layers would composite over one another and each would simply
           hide the ones before it, instead of adding. */}
       <g ref={keyHaloRef} opacity={0}>
-        {/* Rotation rides one rigid inner group, so all four layers orbit the
-            key together and stay exactly opposite however the cursor moves. */}
-        <g ref={haloOrbitRef}>
+        {/* Each colour is its own group so the two can be placed independently
+            per frame. The tick slides each group's CENTRE around the key on a
+            circle (see the orbit block); the <use> shapes only scale about the
+            key centre, so the shapes stay upright and never rotate. */}
+        <g ref={haloBlueRef}>
           <g className="key-halo-blend" filter="url(#key-halo-scatter)">
             <use
               href="#blob-core-path"
               fill={HALO_BLUE}
               opacity={HALO_SCATTER_BLUE}
-              transform={haloUseTransform(HALO_SCATTER_SCALE, HALO_BLUE_DX, HALO_BLUE_DY)}
-            />
-          </g>
-          <g className="key-halo-blend" filter="url(#key-halo-scatter)">
-            <use
-              href="#blob-core-path"
-              fill={HALO_VIOLET}
-              opacity={HALO_SCATTER_VIOLET}
-              transform={haloUseTransform(HALO_SCATTER_SCALE, -HALO_BLUE_DX, -HALO_BLUE_DY)}
+              transform={`translate(${KEY_HALO_CX} ${KEY_HALO_CY}) scale(${HALO_SCATTER_SCALE}) translate(${-KEY_HALO_CX} ${-KEY_HALO_CY})`}
             />
           </g>
           <g className="key-halo-blend" filter="url(#key-halo-core)">
@@ -1075,7 +1090,17 @@ export function BlobMorph({ progress = 0 }: BlobMorphProps) {
               href="#blob-core-path"
               fill={HALO_BLUE}
               opacity={HALO_CORE_BLUE}
-              transform={haloUseTransform(HALO_CORE_SCALE, HALO_BLUE_DX, HALO_BLUE_DY)}
+              transform={`translate(${KEY_HALO_CX} ${KEY_HALO_CY}) scale(${HALO_CORE_SCALE}) translate(${-KEY_HALO_CX} ${-KEY_HALO_CY})`}
+            />
+          </g>
+        </g>
+        <g ref={haloVioletRef}>
+          <g className="key-halo-blend" filter="url(#key-halo-scatter)">
+            <use
+              href="#blob-core-path"
+              fill={HALO_VIOLET}
+              opacity={HALO_SCATTER_VIOLET}
+              transform={`translate(${KEY_HALO_CX} ${KEY_HALO_CY}) scale(${HALO_SCATTER_SCALE}) translate(${-KEY_HALO_CX} ${-KEY_HALO_CY})`}
             />
           </g>
           <g className="key-halo-blend" filter="url(#key-halo-core)">
@@ -1083,7 +1108,7 @@ export function BlobMorph({ progress = 0 }: BlobMorphProps) {
               href="#blob-core-path"
               fill={HALO_VIOLET}
               opacity={HALO_CORE_VIOLET}
-              transform={haloUseTransform(HALO_CORE_SCALE, -HALO_BLUE_DX, -HALO_BLUE_DY)}
+              transform={`translate(${KEY_HALO_CX} ${KEY_HALO_CY}) scale(${HALO_CORE_SCALE}) translate(${-KEY_HALO_CX} ${-KEY_HALO_CY})`}
             />
           </g>
         </g>
