@@ -810,17 +810,50 @@ body::after {
                   blur's ~2.4 sigma reach, or the spill gets a straight cut)
    Per layer, from the same component:
      --glow-base-x/-y  resting offset past its edge, px
-     --glow-amp        ambient drift amplitude, px
+     --glow-orbit      the pair's shared resting offset angle, rad
+     --glow-amp        ambient drift amplitude, deg (angle, NOT a distance)
      --glow-dur/-delay ambient drift period / phase offset
    -------------------------------------------------------------------------- */
 .keycap-glow-spill {
   position: absolute;
   /* Inflated past the keycap box by the bleed headroom, so the blur has room
      to spread — a filter's result is clipped to its own border box. */
+  /* Defaults here are the pre-hydration values; KeycapGlow.tsx overrides them
+     immediately on mount, so these must be kept in step with its constants or
+     the spill visibly pops on first paint. */
   inset: calc(var(--glow-bleed, 48px) * -1);
-  filter: blur(var(--glow-blur, 20px));
+  /* brightness() restores the density the spill loses as the blur spreads it
+     over a growing area. It rides the existing filter chain rather than being
+     an opacity on the layer: fading the layer instead would bring back exactly
+     the faint-but-present non-escape halo the feather exists to eliminate. */
+  filter: blur(var(--glow-blur, 15px)) brightness(var(--glow-strength, 1.25));
   mix-blend-mode: screen;
   will-change: transform;
+
+  /* The orbit's pivot. This layer is inflated symmetrically around the keycap,
+     so its own centre IS the keycap's centre — which is what lets the driver
+     swing the offset around the key by rotating the whole layer. Stated
+     explicitly because the entire motion model depends on it; the default
+     happens to match, but silently. */
+  transform-origin: center;
+
+  /* The directional feather, and only the feather. It lives here rather than on
+     a wrapper because masks apply AFTER filters: clipping the already-blurred
+     pixels is what takes the non-escape side to exactly zero. A wrapper would
+     be cut first and the blur would re-spread across the boundary. A wrapper
+     is not available anyway — `mask` creates a stacking context, which would
+     isolate `plus-lighter` from the scene and flatten the additive glow.
+
+     One layer, so no `mask-composite` (and no legacy `-webkit-` keyword
+     translation): a plain gradient mask works everywhere gradients do. The
+     keycap alpha mask is NOT repeated here — the tint child already carries it,
+     and this element's box is inflated by the bleed, so re-fitting the PNG
+     here would size the mask differently from the calibrated keycap rect and
+     cut nothing. */
+  -webkit-mask-image: var(--glow-feather);
+  mask-image: var(--glow-feather);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
 
 /* plus-lighter sums the two spills properly where it exists; screen is the
@@ -832,11 +865,46 @@ body::after {
 }
 
 .keycap-glow-violet {
-  --glow-tint: #603db6;
+  /* Lifted from #603db6: a tint this dark reads as grey haze once the blur has
+     spread it, and brightness() can't fix that — scaling luminance up on a
+     desaturated near-black just makes a lighter version of the same mud.
+     Raising the tint's own chroma keeps it a colour. */
+  --glow-tint: #7b4ee0;
+  /* Gradient axis: 225deg runs top-right -> bottom-left, so the opaque end
+     lands on violet's escape corner. */
+  --glow-feather-angle: 225deg;
 }
 
 .keycap-glow-blue {
-  --glow-tint: #4b7cd3;
+  /* Likewise lifted from #4b7cd3, with a touch more blue than the violet has
+     red, so the two stay distinguishable once both are bright. */
+  --glow-tint: #5b8ef0;
+  /* 45deg is the same diagonal traversed the other way, putting the opaque end
+     on blue's (opposite) escape corner. Same stops, so both cuts sit at the
+     same distance along the diagonal. */
+  --glow-feather-angle: 45deg;
+}
+
+/* Directional feather — this is what makes the bleed one-sided. A symmetric
+   Gaussian always spreads past every edge, so no offset/blur ratio alone can
+   zero the far side (see the offset note in KeycapGlow.tsx). This gradient is
+   the mask on .keycap-glow-spill: opaque at the escape corner, fully
+   transparent well before the far edge, so the spill is cut to exactly zero
+   on its non-escape side.
+
+   --glow-feather-hold is the point along the diagonal where the cut begins
+   and --glow-feather-ramp where it finishes. Both sit inside the keycap's own
+   box, which keeps the cut — and any blur softening it — hidden underneath
+   the sharp key rather than visible on top of it. */
+.keycap-glow-violet,
+.keycap-glow-blue {
+  --glow-feather: linear-gradient(
+    var(--glow-feather-angle, 225deg),
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0) var(--glow-feather-hold, 56%),
+    rgba(0, 0, 0, 1) var(--glow-feather-ramp, 80%),
+    rgba(0, 0, 0, 1) 100%
+  );
 }
 
 /* The tint: flat colour clipped to the keycap's own alpha, meet-fitted into
@@ -858,46 +926,45 @@ body::after {
 
 /* Coarse-pointer / reduced-motion driver: the transform is handed entirely to
    the compositor. Two layers, two periods (7s / 9s) and a phase offset between
-   them, so the violet and blue never fall into step. */
+   them, so the violet and blue never fall into step.
+
+   The ambient driver orbits for the same reason the cursor driver does: the
+   keyframes rotate the resting offset vector around the layer's centre instead
+   of translating it, so |offset| is invariant and the spill can only travel
+   around the keycap. --glow-orbit is the pair's shared resting angle (set in
+   KeycapGlow.tsx, from blue's side) and --glow-amp is the swing either side of
+   it, in degrees. Both sides use that same angle and differ only in the sign
+   of their offset, so the keyframes keep them exactly opposite. */
 .keycap-glow-drift {
   animation: keycap-glow-drift var(--glow-dur, 7s) ease-in-out var(--glow-delay, 0s) infinite alternate;
 }
 
 @keyframes keycap-glow-drift {
   0% {
-    transform: translate3d(var(--glow-base-x, 0px), var(--glow-base-y, 0px), 0);
+    transform: rotate(var(--glow-orbit, 0rad)) translate3d(var(--glow-base-x, 0px), var(--glow-base-y, 0px), 0);
   }
   25% {
-    transform: translate3d(
-      calc(var(--glow-base-x, 0px) + var(--glow-amp, 8px) * 0.8),
-      calc(var(--glow-base-y, 0px) - var(--glow-amp, 8px) * 0.5),
-      0
-    );
+    transform: rotate(calc(var(--glow-orbit, 0rad) + var(--glow-amp, 10deg) * 0.8))
+      translate3d(var(--glow-base-x, 0px), var(--glow-base-y, 0px), 0);
   }
   50% {
-    transform: translate3d(
-      calc(var(--glow-base-x, 0px) + var(--glow-amp, 8px) * 0.2),
-      calc(var(--glow-base-y, 0px) - var(--glow-amp, 8px)),
-      0
-    );
+    transform: rotate(calc(var(--glow-orbit, 0rad) + var(--glow-amp, 10deg) * 0.2))
+      translate3d(var(--glow-base-x, 0px), var(--glow-base-y, 0px), 0);
   }
   75% {
-    transform: translate3d(
-      calc(var(--glow-base-x, 0px) - var(--glow-amp, 8px) * 0.6),
-      calc(var(--glow-base-y, 0px) - var(--glow-amp, 8px) * 0.3),
-      0
-    );
+    transform: rotate(calc(var(--glow-orbit, 0rad) - var(--glow-amp, 10deg) * 0.6))
+      translate3d(var(--glow-base-x, 0px), var(--glow-base-y, 0px), 0);
   }
   100% {
-    transform: translate3d(var(--glow-base-x, 0px), var(--glow-base-y, 0px), 0);
+    transform: rotate(var(--glow-orbit, 0rad)) translate3d(var(--glow-base-x, 0px), var(--glow-base-y, 0px), 0);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .keycap-glow-drift {
     animation: none;
-    /* Hold the resting edge offset so the bleed still reads, minus the drift. */
-    transform: translate3d(var(--glow-base-x, 0px), var(--glow-base-y, 0px), 0);
+    /* Hold the resting orbit so the bleed still reads, minus the drift. */
+    transform: rotate(var(--glow-orbit, 0rad)) translate3d(var(--glow-base-x, 0px), var(--glow-base-y, 0px), 0);
   }
 }
 
