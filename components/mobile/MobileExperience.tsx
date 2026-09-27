@@ -1,19 +1,3 @@
-/**
- * HackTVM'26 — Access Point
- * MobileExperience — the < 768px layout.
- *
- * Structure:
- *  - Full-screen transparent scroller of invisible spacers (one per beat).
- *    Scrolling anywhere over the viewport drives the blob's phase progress.
- *  - BlobStage moved into the top half (see .mobile-stage in globals.css).
- *  - MobileBeatPanel fixed in the bottom half renders the active beat.
- *
- * The active beat / phase / sub-progress are computed from spacer geometry via
- * mapMobileScroll — the only source of progress on mobile (desktop is
- * unmounted here, so IntersectionObserver and snap-scroll never run).
- */
-"use client";
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BlobMorph } from "@/components/BlobMorph";
 import { BlobStage } from "@/components/BlobStage";
@@ -30,6 +14,7 @@ import {
 import { useApp } from "@/context/AppContext";
 import { useLatchedProgress } from "@/hooks/useLatchedProgress";
 import { AuroraBackground } from "@/components/AuroraBackground";
+import { KEY_RIGID_PROGRESS } from "@/components/BlobMorph";
 
 const LAST_INDEX = BEATS.length - 1;
 
@@ -107,6 +92,9 @@ export function MobileExperience() {
      blob on every beat (effective progress stays at 1). */
   const effectiveProgress = useLatchedProgress(blobProgress);
 
+  const isKeyBeat = activeBeat.id === "key";
+  const isKeyResolved = effectiveProgress >= KEY_RIGID_PROGRESS;
+
   return (
     <main className="relative h-svh w-full overflow-hidden bg-black text-white">
       {/* Aurora brand background — identical on every beat. */}
@@ -119,7 +107,7 @@ export function MobileExperience() {
       </BlobStage>
 
       {/* Bottom-half beat content (fixed; pointer-events pass through) */}
-      <MobileBeatPanel beat={activeBeat} />
+      <MobileBeatPanel beat={activeBeat} isKeyResolved={isKeyResolved} isKeyBeat={isKeyBeat} />
 
       {beatIndex === 0 && <MobileScrollCue visible={!hasScrolled} />}
 

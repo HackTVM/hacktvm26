@@ -10,7 +10,7 @@
  */
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useApp } from "@/context/AppContext";
 import { KineticText } from "@/components/KineticText";
@@ -135,11 +135,25 @@ function renderContent(content: BeatContent) {
 
 interface MobileBeatPanelProps {
   beat: Beat;
+  isKeyResolved: boolean;
+  isKeyBeat: boolean;
 }
 
-export function MobileBeatPanel({ beat }: MobileBeatPanelProps) {
+export function MobileBeatPanel({ beat, isKeyResolved, isKeyBeat }: MobileBeatPanelProps) {
   const { isReducedMotion } = useApp();
   const boxRef = useRef<HTMLDivElement>(null);
+  const [showLinks, setShowLinks] = useState(false);
+
+  useEffect(() => {
+    if (!isKeyBeat || !isKeyResolved) {
+      setShowLinks(false);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setShowLinks(true);
+    }, 1400);
+    return () => window.clearTimeout(timer);
+  }, [isKeyBeat, isKeyResolved]);
 
   /* Dev-only overflow warning: report any beat whose content is taller than
      the panel. The panel crossfades with AnimatePresence `mode="wait"`, so the
@@ -182,6 +196,12 @@ export function MobileBeatPanel({ beat }: MobileBeatPanelProps) {
 
   const phaseLabel = SECTION_LABELS[SECTION_IDS[beat.phase]];
 
+  const links = [
+    { label: "Answers", href: "#" },
+    { label: "Builds", href: "#" },
+    { label: "Moments", href: "#" },
+  ] as const;
+
   return (
     <div ref={boxRef} className="mobile-panel">
       <div className="h-full">
@@ -214,6 +234,26 @@ export function MobileBeatPanel({ beat }: MobileBeatPanelProps) {
               {phaseLabel}
             </p>
             {renderContent(beat.content)}
+            {isKeyBeat && showLinks && (
+              <nav
+                className="mt-4 w-full max-w-[80%] opacity-0 animate-fade-in transition-opacity duration-700"
+                aria-label="Navigation"
+              >
+                <ul className="flex flex-col items-center gap-4">
+                  {links.map((link) => (
+                    <li key={link.label}>
+                      <a
+                        href={link.href}
+                        className="font-mono text-sm uppercase tracking-[0.2em] text-cream text-glow hover:text-cream/80 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream block text-center"
+                        aria-label={link.label}
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            )}
           </motion.article>
         </AnimatePresence>
       </div>

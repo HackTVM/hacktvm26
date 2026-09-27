@@ -1,10 +1,3 @@
-/**
- * HackTVM'26 — Access Point
- * Desktop experience (>= 768px). Renders the classic scroll-snap sections
- * with the center blob. This is the original page layout — visually and
- * behaviorally unchanged from before the mobile pass.
- */
-"use client";
 import { useRef, useState } from "react";
 import { useScroll, useMotionValueEvent } from "framer-motion";
 import { BlobMorph } from "@/components/BlobMorph";
@@ -59,7 +52,7 @@ export function DesktopExperience() {
         <ThemeSection />
         <FormatSection />
         <TimelineSection />
-        <KeySection />
+        <KeySection progress={effectiveProgress} />
       </div>
     </main>
   );

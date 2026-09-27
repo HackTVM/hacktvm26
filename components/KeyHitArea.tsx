@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { KEY_RIGID_PROGRESS, KEY_VISUAL_ID } from "@/components/BlobMorph";
 
@@ -47,6 +47,8 @@ const LOGO_PRESS_MS = 100; //  → scale(0.9), quick sharp drop
 const LOGO_DWELL_MS = 200; //   hold at the bottom (mechanism "sits")
 const LOGO_RELEASE_MS = 340; // → scale(1), same speed, no overshoot
 
+const HINT_DELAY_MS = 10_000; // 10s after key resolves before showing hint
+
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
@@ -57,6 +59,7 @@ export function KeyHitArea({ progress }: KeyHitAreaProps) {
     isReducedMotion,
     setIsModalOpen,
     setModalOrigin,
+    hasOpenedModal,
   } = useApp();
 
   /* Armed whenever the key is resolved. Pre-latch that only happens on the key
@@ -64,6 +67,21 @@ export function KeyHitArea({ progress }: KeyHitAreaProps) {
      latched, the resolved key replaces the blob on every section, so the hit
      area stays live everywhere. */
   const isActive = progress >= KEY_RIGID_PROGRESS;
+
+  /* Hint visibility: show after HINT_DELAY_MS once key is resolved,
+     but never show again if user has already opened the modal once. */
+  const [showHint, setShowHint] = useState(false);
+
+  useEffect(() => {
+    if (!isActive || hasOpenedModal) {
+      setShowHint(false);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setShowHint(true);
+    }, HINT_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [isActive, hasOpenedModal]);
 
   /* Shrink the visible key logo to ~90%, let it spring back, then return so
      the modal opens only after the click-push reads complete. Reduced motion
@@ -130,14 +148,17 @@ export function KeyHitArea({ progress }: KeyHitAreaProps) {
         <span className="sr-only">The key</span>
       </button>
 
-      {isActive && (
+      {/* "Click/Tap the key" hint — appears after delay, never again after first modal open */}
+      {showHint && (
         <p
           aria-hidden="true"
           className={[
             "absolute left-1/2 -translate-x-1/2",
-            "top-[calc(var(--blob-size)*0.7187_+_0.75rem)]",
+            "top-[calc(var(--blob-size)*0.7187_+_1.25rem)]",
             "font-mono text-xs uppercase tracking-[0.2em] whitespace-nowrap",
             "text-cream/70 pointer-events-none",
+            "transition-opacity duration-500",
+            "animate-blink",
           ].join(" ")}
         >
           {isTouchDevice ? "Tap the key" : "Click the key"}

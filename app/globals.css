@@ -314,6 +314,43 @@ body::after {
   }
 }
 
+/* ---------- Blink Animation ----------
+   For the "click/tap the key" hint — steady on/off pulse, not the flicker-in warm-up. */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.animate-blink {
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-blink {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* ---------- Fade-in Animation ----------
+   For navigation links appearing after key resolves. */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.7s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in {
+    animation: none;
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ---------- Glow Text Utility ---------- */
 .text-glow {
   text-shadow:
