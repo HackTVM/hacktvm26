@@ -150,21 +150,6 @@ export const KEY_RIGID_PROGRESS = 0.97;   // detail fully visible, tilt interact
    center. Markup/style only — never physics. */
 export const KEY_VISUAL_ID = "key-visual";
 
-/* Box of the resolved keycap <image>, in the 200-unit viewBox space of the SVG
-   below. Published upward by BlobMorph so sibling HTML layers (KeycapGlow's
-   chromatic bleed) can be positioned over the key WITHOUT re-deriving the
-   silhouette pipeline or hardcoding the calibration: divide by 200 and you have
-   percentages of the --blob-size box the SVG renders into. */
-export interface KeyVisualRect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-/** ViewBox edge length the KeyVisualRect coordinates are expressed in. */
-export const KEY_VIEWBOX_UNITS = 200;
-
 /* --- Blob mesh gradient (visual layer only) ------------------------------
    A soft mesh-like color field clipped to the blob silhouette (via <use>
    of the physics-written core path — no loop changes). It drifts slowly
@@ -172,6 +157,91 @@ export const KEY_VIEWBOX_UNITS = 200;
    the key resolves (arrival > restlessness). Color values are first-pass. */
 const MESH_SETTLE_START = 0.55;            // begin calming before shape lock
 const MESH_SETTLE_END = KEY_RIGID_PROGRESS; // fully calm once key is rigid
+
+/* --- Key backlight halo (visual layer only) ------------------------------
+   Two opposing radial halos sitting BEHIND the keycap but still INSIDE the
+   blob, so the key reads as lit from behind rather than glowing on its own
+   surface. Lives in the SVG rather than as an HTML sibling because the blob
+   silhouette is opaque black for the whole window in which the key fades in
+   (0.92 -> KEY_RIGID_PROGRESS): a layer behind the <svg> would be hidden
+   exactly while it was supposed to be appearing, and would only surface later
+   as the silhouette faded out. Compositing it between the silhouette and the
+   key's <image> is the only position that is both behind the key and visible
+   during its fade-in.
+
+   Colours are the palette's own phase 1 and phase 3 stops (see lib/theme.ts),
+   so the backlight belongs to the same arc as everything else. Placed on the
+   top-right / bottom-left diagonal, matching the direction that arc travels.
+   Not clipped to the blob, so it survives the silhouette's fade-out and stays
+   behind the key in its final, settled state. */
+const HALO_BLUE = "#4B7CD3";
+const HALO_VIOLET = "#603DB6";
+
+/* Centre of the resolved keycap's <image> in the 200-unit viewBox, from the
+   placement calibrated in KeyHitArea: (57.3, 57.9) -> (152.4, 134.5), whose
+   midpoint is (104.85, 96.2). The halos are centred there so the light reads
+   as coming from behind the key rather than from the middle of the canvas. */
+const KEY_HALO_CX = 104.85;
+const KEY_HALO_CY = 96.2;
+
+/* Blue rests up-and-right of the key, violet opposite. This diagonal is both the
+   resting direction of the pair and the reference the cursor orbit rotates from,
+   so blue always leans toward the pointer and violet, being opposite, away. */
+const HALO_BLUE_DX = 11;
+const HALO_BLUE_DY = -11;
+const HALO_BLUE_REST_ANGLE = Math.atan2(HALO_BLUE_DY, HALO_BLUE_DX);
+
+/* The light is a blurred copy of the KEYCAP SILHOUETTE, not a disc. An earlier
+   build filled two ellipses with radial gradients and it read as a flat
+   translucent disc — the "typical circle" that never looked like light. Taking
+   the glow's shape from the logo means it streams out from behind the key
+   itself, and the silhouette's own notches break up the circular falloff.
+
+   Each colour is two layers, which is what separates light from a blob: a tight
+   bright core (the source) and a wide faint one (scatter in the air). Sigma is
+   large relative to the 95x77 key, so the core's falloff is gradual rather than
+   an abrupt blurred edge. Scales are about the key centre, then offset.
+
+   CRITICAL — the scales are set against KEY_COVER_SCALE, not the silhouette.
+   This light is drawn BEHIND the key <image>, whose opaque ink spans ~1.02x the
+   silhouette (93% ink coverage x KEY_COVER_SCALE 1.1). A core that only just
+   clears the silhouette therefore hides its own peak under the key: the glow
+   then reads only while the key is still translucent, and vanishes the moment
+   the key goes opaque. Both scales must keep the bright plateau OUTSIDE that
+   ink so light persists at rest. The core reaches ~19 units past the key edge. */
+const HALO_CORE_BLUR = 12;
+const HALO_SCATTER_BLUR = 28;
+const HALO_CORE_SCALE = 1.42;
+const HALO_SCATTER_SCALE = 1.85;
+
+/* Additive, so the two colours SUM where they overlap and clip toward white.
+   The opposing offsets keep that overlap small and off-centre, which is what
+   lets the core stay this bright while still reading as saturated colour
+   instead of blowing out. */
+const HALO_CORE_BLUE = 0.9;
+const HALO_CORE_VIOLET = 0.75;
+const HALO_SCATTER_BLUE = 0.34;
+const HALO_SCATTER_VIOLET = 0.3;
+
+/* Cursor-driven orbit, same contract the removed glow used: the offset vector is
+   only ever ROTATED about the key centre, never lengthened, so the light travels
+   around the key and its distance from the key never changes. No clamp — an
+   earlier build capped the swing and the halo froze across most of the screen,
+   reading as broken. Full range is safe because both colours ride ONE shared
+   rotation (they are rigidly grouped), which keeps them exactly opposite. */
+const HALO_EASE = 0.12;
+/* Radius around the key centre (viewBox units) within which the cursor angle is
+   treated as undefined and the last angle is held, so the light doesn't spin
+   when the pointer is sitting on the key. Key is ~95x77 units, so this keeps the
+   deadzone just inside it. */
+const HALO_DEADZONE_UNITS = 30;
+
+/* Scale about the key centre, THEN offset. The centre maps to
+   (KEY_HALO_CX + scale*dx, KEY_HALO_CY + scale*dy), so the scatter layer, having
+   the larger scale, also throws its light a little wider. */
+function haloUseTransform(scale: number, dx: number, dy: number) {
+  return `translate(${KEY_HALO_CX} ${KEY_HALO_CY}) scale(${scale}) translate(${-KEY_HALO_CX} ${-KEY_HALO_CY}) translate(${dx} ${dy})`;
+}
 
 /* --- Blob film grain (visual layer only) --------------------------------
    A single soft grain layer + a directional veil + a soft inner sheen, all
@@ -324,23 +394,38 @@ interface KeyImagePlacement {
 
 interface BlobMorphProps {
   progress?: number;
-  /**
-   * Fired once, with the resolved keycap's box in viewBox units, as soon as the
-   * silhouette pipeline has produced it. The crisp <image> is mounted in the
-   * same commit, so anything positioned from this rect lines up with the key by
-   * construction. The latest callback is read through a ref, so passing a fresh
-   * inline arrow does not re-run the asset load.
-   */
-  onKeyRect?: (rect: KeyVisualRect) => void;
 }
 
-export function BlobMorph({ progress = 0, onKeyRect }: BlobMorphProps) {
+export function BlobMorph({ progress = 0 }: BlobMorphProps) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   const corePathRef = useRef<SVGPathElement>(null);
+  /* The blob-fade opacity lives on the wrapper <g>, NEVER on #blob-core-path
+     itself. A <use> deep-clones its target *including inline style*, so any
+     style.opacity written on the path is inherited by every clone — the sheen
+     and, critically, the key-backlight <use>s. The backlight lives outside the
+     blob, so inheriting the blob's fade made the light dissolve with the blob
+     (it faded in with the key, then vanished as the blob eased out). Fading the
+     wrapper leaves the path presentation-free for its clones to restyle. */
+  const coreSilhouetteRef = useRef<SVGGElement>(null);
+
+  /* The backlight behind the key. Opacity is driven from the SAME detailReveal
+     value as the key's own <image> (not the latched progress prop, which snaps
+     to 1) so the two are always at the same point in their fade and the light
+     can never finish arriving before — or after — the key it is behind. */
+  const keyHaloRef = useRef<SVGGElement>(null);
+  const haloOrbitRef = useRef<SVGGElement>(null);
   const specularShiftRef = useRef<SVGGElement>(null);
   const meshGroupRef = useRef<SVGGElement>(null);
   const logoImageRef = useRef<SVGImageElement>(null);
+
+  /* Halo orbit state. Target is null until the cursor is captured (and stays
+     null on coarse pointers / reduced motion, so the halo rests). Angle is the
+     eased current value; lastRot avoids rewriting an identical transform
+     attribute every frame. */
+  const haloTargetRef = useRef<number | null>(null);
+  const haloAngleRef = useRef(0);
+  const lastHaloRotRef = useRef<string | null>(null);
 
   const targetRadiiRef = useRef<Float32Array>(generateFallbackRadii(NUM_POINTS));
   const keyImageRef = useRef<KeyImagePlacement | null>(null);
@@ -424,6 +509,20 @@ export function BlobMorph({ progress = 0, onKeyRect }: BlobMorphProps) {
       const tx = nx * maxCss;
       const ty = ny * maxCss;
       el.style.transform = `translate(${tx.toFixed(2)}px ${ty.toFixed(2)}px)`;
+
+      // Halo orbit target, from the same rect and the same mouse event. Cursor
+      // in viewBox units (viewBox is 0..200 on both axes), then the angle around
+      // the key centre. Held still inside a deadzone around the key.
+      const vx = ((e.clientX - rect.left) / rect.width) * 200;
+      const vy = ((e.clientY - rect.top) / rect.height) * 200;
+      const dx = vx - KEY_HALO_CX;
+      const dy = vy - KEY_HALO_CY;
+      if (Math.hypot(dx, dy) > HALO_DEADZONE_UNITS) {
+        // Rotation that carries blue's rest offset onto the cursor direction.
+        const deg = (Math.atan2(dy, dx) - HALO_BLUE_REST_ANGLE) * (180 / Math.PI);
+        // Wrap to (-180, 180] so the target never teleports across the seam.
+        haloTargetRef.current = (((deg + 180) % 360) + 360) % 360 - 180;
+      }
     };
     window.addEventListener("mousemove", apply);
     return () => window.removeEventListener("mousemove", apply);
@@ -434,11 +533,6 @@ export function BlobMorph({ progress = 0, onKeyRect }: BlobMorphProps) {
     y: -9999,
     active: false,
   });
-
-  const onKeyRectRef = useRef(onKeyRect);
-  useEffect(() => {
-    onKeyRectRef.current = onKeyRect;
-  }, [onKeyRect]);
 
   useEffect(() => {
     let cancelled = false;
@@ -540,14 +634,6 @@ export function BlobMorph({ progress = 0, onKeyRect }: BlobMorphProps) {
             height: drawH * scale * KEY_COVER_SCALE,
           };
           setKeyImageReady(true);
-          /* Publish the same box the <image> below is drawn with (offsets
-             included) so sibling layers can overlay the key exactly. */
-          onKeyRectRef.current?.({
-            x: keyImageRef.current.x + LOGO_OFFSET_X,
-            y: keyImageRef.current.y + LOGO_OFFSET_Y,
-            width: keyImageRef.current.width,
-            height: keyImageRef.current.height,
-          });
         };
 
         img.src = url;
@@ -581,6 +667,7 @@ export function BlobMorph({ progress = 0, onKeyRect }: BlobMorphProps) {
 
     const handleMouseLeave = () => {
       cursorRef.current.active = false;
+      haloTargetRef.current = null;
     };
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
@@ -704,12 +791,34 @@ export function BlobMorph({ progress = 0, onKeyRect }: BlobMorphProps) {
       const blobFadeStr = blobFade.toFixed(3);
       if (blobFadeStr !== lastBlobOpacityRef.current) {
         lastBlobOpacityRef.current = blobFadeStr;
-        if (corePathRef.current) corePathRef.current.style.opacity = blobFadeStr;
+        if (coreSilhouetteRef.current) coreSilhouetteRef.current.style.opacity = blobFadeStr;
         if (meshGroupRef.current) meshGroupRef.current.style.opacity = blobFadeStr;
       }
 
       if (logoImageRef.current) {
         logoImageRef.current.style.opacity = String(detailReveal);
+      }
+
+      /* Same value, same frame, as the key above — see keyHaloRef. */
+      if (keyHaloRef.current) {
+        keyHaloRef.current.style.opacity = String(detailReveal);
+      }
+
+      // Ease the halo's shared rotation toward the target angle, then rotate the
+      // group once. Shortest-arc each frame so it never unwinds the long way
+      // round the seam. When there is no target (no cursor, or a coarse pointer /
+      // reduced motion where the cursor path never runs) it eases back to rest.
+      const target = haloTargetRef.current ?? 0;
+      let d = target - haloAngleRef.current;
+      d = (((d + 180) % 360) + 360) % 360 - 180;
+      haloAngleRef.current += d * HALO_EASE;
+      const deg = haloAngleRef.current.toFixed(2);
+      if (haloOrbitRef.current && deg !== lastHaloRotRef.current) {
+        lastHaloRotRef.current = deg;
+        haloOrbitRef.current.setAttribute(
+          "transform",
+          `rotate(${deg} ${KEY_HALO_CX} ${KEY_HALO_CY})`,
+        );
       }
 
       rafId = requestAnimationFrame(tick);
@@ -836,6 +945,17 @@ export function BlobMorph({ progress = 0, onKeyRect }: BlobMorphProps) {
           <stop offset={`${RIM_BOUNCE_FADE * 100}%`} stopColor={RIM_BOUNCE_COLOR} stopOpacity="0" />
           <stop offset="100%" stopColor={RIM_BOUNCE_COLOR} stopOpacity="0" />
         </linearGradient>
+
+        {/* Key backlight filters. sRGB interpolation is set explicitly: the SVG
+            default is linearRGB, which lightens a blur's falloff and washes the
+            colour out. These are the only filters in the file — everything else
+            is deliberately filter-free. */}
+        <filter id="key-halo-core" x="-60%" y="-60%" width="220%" height="220%" colorInterpolationFilters="sRGB">
+          <feGaussianBlur stdDeviation={HALO_CORE_BLUR} />
+        </filter>
+        <filter id="key-halo-scatter" x="-60%" y="-60%" width="220%" height="220%" colorInterpolationFilters="sRGB">
+          <feGaussianBlur stdDeviation={HALO_SCATTER_BLUR} />
+        </filter>
       </defs>
 
       {/* Core silhouette: pure black via the wrapper <g> (presentation
@@ -843,7 +963,7 @@ export function BlobMorph({ progress = 0, onKeyRect }: BlobMorphProps) {
             path's `d`; the group's fill/stroke are static so #blob-core-path
             itself carries no inline presentation — which is what lets the
             sheen <use> restyle its clone cleanly. */}
-      <g fill="#000000" stroke="none">
+      <g ref={coreSilhouetteRef} fill="#000000" stroke="none">
         <path ref={corePathRef} id="blob-core-path" />
       </g>
 
@@ -908,6 +1028,65 @@ export function BlobMorph({ progress = 0, onKeyRect }: BlobMorphProps) {
           strokeWidth={RIM_BOUNCE_STROKE_WIDTH}
           opacity={rimOpacity}
         />
+      </g>
+
+      {/* Key backlight: AFTER the silhouette and mesh (so it lights the blob)
+          and BEFORE the key's <image> (so the key occludes its centre and the
+          light reads as coming from behind it).
+
+          Each layer is a <use> of the keycap silhouette, recoloured and blurred,
+          NOT a gradient-filled ellipse. The shape of the light is the shape of
+          the logo: it spills from behind the key and is carved by the keycap's
+          notches, which is what keeps it off the "circle with a soft edge" look
+          an ellipse gave. Scale is about the key centre, then the offset, so
+          blue sits up-and-right and violet opposite — the two never share a
+          centre, so the additive blend sums without washing to white.
+
+          Blur (not clip), and deliberately NOT clipped to the blob silhouette:
+          the silhouette fades to nothing once the key resolves, so a clipped
+          glow would end up inside a shape that had already dissolved. Left
+          free, it persists behind the key in its final, settled state.
+
+          The blend is on each layer, not this group: blended as a group the
+          four layers would composite over one another and each would simply
+          hide the ones before it, instead of adding. */}
+      <g ref={keyHaloRef} opacity={0}>
+        {/* Rotation rides one rigid inner group, so all four layers orbit the
+            key together and stay exactly opposite however the cursor moves. */}
+        <g ref={haloOrbitRef}>
+          <g className="key-halo-blend" filter="url(#key-halo-scatter)">
+            <use
+              href="#blob-core-path"
+              fill={HALO_BLUE}
+              opacity={HALO_SCATTER_BLUE}
+              transform={haloUseTransform(HALO_SCATTER_SCALE, HALO_BLUE_DX, HALO_BLUE_DY)}
+            />
+          </g>
+          <g className="key-halo-blend" filter="url(#key-halo-scatter)">
+            <use
+              href="#blob-core-path"
+              fill={HALO_VIOLET}
+              opacity={HALO_SCATTER_VIOLET}
+              transform={haloUseTransform(HALO_SCATTER_SCALE, -HALO_BLUE_DX, -HALO_BLUE_DY)}
+            />
+          </g>
+          <g className="key-halo-blend" filter="url(#key-halo-core)">
+            <use
+              href="#blob-core-path"
+              fill={HALO_BLUE}
+              opacity={HALO_CORE_BLUE}
+              transform={haloUseTransform(HALO_CORE_SCALE, HALO_BLUE_DX, HALO_BLUE_DY)}
+            />
+          </g>
+          <g className="key-halo-blend" filter="url(#key-halo-core)">
+            <use
+              href="#blob-core-path"
+              fill={HALO_VIOLET}
+              opacity={HALO_CORE_VIOLET}
+              transform={haloUseTransform(HALO_CORE_SCALE, -HALO_BLUE_DX, -HALO_BLUE_DY)}
+            />
+          </g>
+        </g>
       </g>
 
       {keyImageReady && keyImageRef.current && (
