@@ -12,13 +12,14 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { useApp } from "@/context/AppContext";
 import { DURATIONS } from "@/lib/constants";
+import { HamburgerMenu } from "@/components/HamburgerMenu";
 
 export function Header() {
   const { isLoading, isReducedMotion } = useApp();
 
   return (
     <motion.header
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center pointer-events-none pt-4"
+      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between pointer-events-none pt-4 px-4"
       aria-hidden={isLoading}
       initial={{ opacity: 0 }}
       animate={{ opacity: isLoading ? 0 : 1 }}
@@ -27,14 +28,23 @@ export function Header() {
         delay: isReducedMotion ? 0 : 0.3,
       }}
     >
-      <Image
-        src="/logo.png"
-        alt="HackTVM'26"
-        width={240}
-        height={40}
-        priority
-        className="select-none py-4 h-auto w-auto max-h-12"
-      />
+      {/* Left spacer for balance - matches hamburger menu width */}
+      <div className="w-[48px] h-[48px]" aria-hidden="true" />
+
+      {/* Centered wordmark */}
+      <div className="flex-1 flex justify-center pointer-events-auto">
+        <Image
+          src="/logo.png"
+          alt="HackTVM'26"
+          width={240}
+          height={40}
+          priority
+          className="select-none py-4 h-auto w-auto max-h-12"
+        />
+      </div>
+
+      {/* Hamburger menu - top right */}
+      <HamburgerMenu />
     </motion.header>
   );
 }
