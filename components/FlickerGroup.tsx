@@ -68,13 +68,19 @@ export function FlickerGroup({
       return [FIRST_DELAY + windowSize / 2];
     }
 
+    // Generate positions with jitter
     const positions = Array.from({ length: count }, (_, i) => {
       const base = (i / (count - 1)) * windowSize;
       const jitter = (rand() - 0.5) * (windowSize / (count * 2));
       return Math.max(0, Math.min(windowSize, base + jitter));
     });
 
-    positions.sort((a, b) => a - b);
+    // Shuffle positions for truly random assignment
+    for (let i = positions.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [positions[i], positions[j]] = [positions[j], positions[i]];
+    }
+
     return positions.map((p) => FIRST_DELAY + p);
   }, [seedBase, childArray.length]);
 
