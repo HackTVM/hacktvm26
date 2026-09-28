@@ -28,6 +28,7 @@ interface FlickerGroupProps {
   children: React.ReactNode;
   /** Optional group id for deterministic seeding across renders. */
   groupId?: string;
+  className?: string;
   /** Fraction of the element that must be visible before revealing. */
   revealThreshold?: number;
 }
@@ -39,6 +40,7 @@ const WINDOW_END = 2000; // ms, all must finish by this (incl. FIRST_DELAY)
 export function FlickerGroup({
   children,
   groupId,
+  className,
   revealThreshold = 0.5,
 }: FlickerGroupProps) {
   const { isReducedMotion, isLoading } = useApp();
@@ -99,7 +101,7 @@ export function FlickerGroup({
   }, [isReducedMotion, isLoading, revealed, revealThreshold]);
 
   return (
-    <div ref={ref} className="flicker-group">
+    <div ref={ref} className={"flicker-group " + className}>
       {childArray.map((child, index) => {
         const delay = childDelays[index] ?? FIRST_DELAY;
         return (

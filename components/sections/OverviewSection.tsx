@@ -27,15 +27,15 @@ export function OverviewSection() {
           <h2 className="py-1 font-mono uppercase tracking-wide text-lg font-bold mb-2 text-glow">
             Overview
           </h2>
-          <FlickerGroup groupId="overview-bottom">
-            <ul className="text-gray-mid leading-7">
+          <ul className="text-gray-mid leading-7">
+            <FlickerGroup groupId="overview-bottom">
               <li><b>Date:</b> October 10, 2026</li>
               <li><b>Venue:</b> The School of the Good Shepherd</li>
               <li><b>Eligibility:</b> Grades 8 to 12</li>
               <li><b>Entry Fee:</b> &#8377;1200 per team(after screening)</li>
               <li><b>The Opportunity:</b> &#8377;10,000 development grant for finalist teams and tech-internships, along with cash prizes, for top 3 winners</li>
-            </ul>
-          </FlickerGroup>
+            </FlickerGroup>
+          </ul>
         </div>
       </div>
     </SectionWrapper>

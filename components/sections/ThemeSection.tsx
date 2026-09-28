@@ -18,7 +18,7 @@ export function ThemeSection() {
               Access Point
             </h1>
           </div>
-          <FlickerGroup groupId="theme-left">
+          <FlickerGroup className="space-y-6" groupId="theme-left">
             <p className="leading-7">If a system or space stands between a person and their independence, it's broken. You're here to build the sledgehammer</p>
             <p className="leading-7">
               <b>Access Point</b> challenges students to design working technology that closes real, everyday gaps in accessibility and inclusivity. Modern design optimizes for an "idealized default user," treating edge cases as an afterthought. We are here to shift that dynamic.</p>

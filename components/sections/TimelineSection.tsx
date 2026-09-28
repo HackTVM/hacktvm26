@@ -18,17 +18,17 @@ export function TimelineSection() {
                 What You Can Win
               </h1>
             </div>
-            <FlickerGroup groupId="timeline-left-top">
-              <div className="mb-6">
-                <h2 className="pb-1 font-mono uppercase tracking-wide">Top 5 Finalists</h2>
+            <FlickerGroup className="space-y-6" groupId="timeline-left-top">
+              <div>
+                <h2 className="pb-1 font-mono uppercase tracking-wide font-bold">Top 5 Finalists</h2>
                 <p>&#8377;10,000 development grant per team to build out your prototype</p>
               </div>
-              <div className="mb-6">
-                <h2 className="pb-1 font-mono uppercase tracking-wide">Top 3 Winners</h2>
+              <div>
+                <h2 className="pb-1 font-mono uppercase tracking-wide font-bold">Top 3 Winners</h2>
                 <p>Cash prizes of &#8377;25000, &#8377;15000 and &#8377;10000 and project-based internships with partner tech companies</p>
               </div>
-              <div className="mb-6">
-                <h2 className="pb-1 font-mono uppercase tracking-wide">All Participants</h2>
+              <div>
+                <h2 className="pb-1 font-mono uppercase tracking-wide font-bold">All Participants</h2>
                 <p>Official certificates, direct tech industry exposure and mentor feedback</p>
               </div>
             </FlickerGroup>
@@ -39,13 +39,13 @@ export function TimelineSection() {
                 How We Judge
               </h1>
             </div>
-            <FlickerGroup groupId="timeline-left-bottom">
-              <ul className="list-disc pl-6 leading-7">
+            <ul className="list-disc pl-6 leading-7">
+              <FlickerGroup groupId="timeline-left-bottom">
                 <li><b>Concept & Vision:</b> Idea originality and a realistic roadmap to scale it</li>
                 <li><b>Theme Alignment:</b> Real-world impact solved from the user's perspective, not assumptions</li>
                 <li><b>Technical Execution:</b> Working code or hardware that you can defend in technical Q&A</li>
-              </ul>
-            </FlickerGroup>
+              </FlickerGroup>
+            </ul>
           </div>
         </div>
 
@@ -56,18 +56,18 @@ export function TimelineSection() {
               Registration Checklist
             </h1>
           </div>
-          <FlickerGroup groupId="timeline-right">
-            <div className="leading-7">
-              <p className="pb-1">Before you hit submit, make sure your team has all of this sorted out:</p>
-              <ul className="list-disc pl-6 leading-7">
+          <div className="leading-7">
+            <p className="pb-2">Before you hit submit, make sure your team has all of this sorted out:</p>
+            <ul className="list-disc pl-6">
+              <FlickerGroup className="leading-7 space-y-2" groupId="timeline-right">
                 <li><b>Grade Level:</b> Students in Grades 8 to 12</li>
                 <li><b>Team Size:</b> 2 to 4 students per team</li>
                 <li><b>Team Limit:</b> Strictly 1 team per school</li>
                 <li><b>Faculty Mentor:</b> 1 teacher or faculty member to accompany the team as a mentor</li>
                 <li><b>Principal's Approval:</b> A signed and stamped Letter of Authorization from your school Principal</li>
-              </ul>
-            </div>
-          </FlickerGroup>
+              </FlickerGroup>
+            </ul>
+          </div>
         </div>
       </div>
     </SectionWrapper>
