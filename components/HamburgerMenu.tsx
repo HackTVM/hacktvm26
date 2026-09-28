@@ -19,8 +19,9 @@ const NAV_LINKS: NavLink[] = [
   { label: "Moments", href: "#", disabled: true, comingSoon: true },
 ];
 
-// Dark purple from theme
-const DARK_PURPLE = "#340A61";
+// Theme colors
+const THEME_BLUE = "#4B7CD3";
+const WHITE = "#FFFFFF";
 
 export function HamburgerMenu() {
   const { isReducedMotion } = useApp();
@@ -123,7 +124,7 @@ export function HamburgerMenu() {
       >
         {/* Background box - scales from top-right corner */}
         <motion.div
-          className="flex items-center justify-center border border-white/20 bg-white"
+          className="flex items-center justify-center bg-black/25"
           style={{
             width: closedSize,
             height: closedSize,
@@ -147,7 +148,7 @@ export function HamburgerMenu() {
             id="hamburger-menu"
             ref={menuRef}
             role="menu"
-            className="absolute top-0 right-0 w-[280px] h-[280px] flex flex-col items-start justify-start pl-8 pr-0 pt-10 pb-2"
+            className="absolute top-0 right-0 w-[280px] h-[280px] flex flex-col items-start justify-start pl-8 pr-0 pt-10"
             style={{
               transformOrigin: "top right",
             }}
@@ -170,8 +171,8 @@ export function HamburgerMenu() {
                     font-mono text-sm uppercase tracking-[0.1em]
                     rounded px-4 py-2 transition-colors
                     ${link.disabled
-                      ? "text-gray-500 cursor-not-allowed"
-                      : "text-black hover:text-purple-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-900"
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-white hover:text-[#4B7CD3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B7CD3]"
                     }
                   `}
                   initial={{ opacity: 0, x: -10 }}
@@ -185,7 +186,7 @@ export function HamburgerMenu() {
                   {link.label}
                   {link.comingSoon && (
                     <span
-                      className="text-xs uppercase tracking-[0.05em] bg-purple-900 text-white px-2 py-0.5 rounded"
+                      className="text-xs uppercase tracking-[0.05em] bg-[#4B7CD3] text-white px-2 py-0.5 rounded"
                       aria-hidden="true"
                     >
                       coming soon
@@ -208,7 +209,7 @@ export function HamburgerMenu() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <X width={24} height={24} strokeWidth={2} stroke={DARK_PURPLE} />
+              <X width={24} height={24} strokeWidth={2} stroke={WHITE} />
             </motion.div>
           ) : (
             <motion.div
@@ -219,7 +220,7 @@ export function HamburgerMenu() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <Menu width={24} height={24} strokeWidth={2} stroke={DARK_PURPLE} />
+              <Menu width={24} height={24} strokeWidth={2} stroke={WHITE} />
             </motion.div>
           )}
         </AnimatePresence>
