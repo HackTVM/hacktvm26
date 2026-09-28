@@ -13,9 +13,9 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useApp } from "@/context/AppContext";
-import { KineticText } from "@/components/KineticText";
 import { SECTION_IDS, SECTION_LABELS } from "@/lib/constants";
 import type { Beat, BeatContent } from "@/lib/mobile-beats";
+import { FlickerGroup } from "@/components/FlickerGroup";
 
 const warnedBeats = new Set<string>();
 
@@ -25,14 +25,16 @@ function renderContent(content: BeatContent) {
       return (
         <div>
           <h1 className="font-mono text-xl font-bold leading-tight text-cream text-glow">
-            <KineticText text={content.title} />
+            {content.title}
           </h1>
-          <p className="mt-1 font-mono text-[15px] uppercase tracking-wide text-blue">
-            {content.tagline}
-          </p>
-          <p className="mt-2 text-[15px] leading-[1.5] text-gray-light">
-            {content.body}
-          </p>
+          <FlickerGroup groupId={`mobile-hero-${content.title}`}>
+            <p className="mt-1 font-mono text-[15px] uppercase tracking-wide text-blue">
+              {content.tagline}
+            </p>
+            <p className="mt-2 text-[15px] leading-[1.5] text-gray-light">
+              {content.body}
+            </p>
+          </FlickerGroup>
         </div>
       );
 

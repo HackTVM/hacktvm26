@@ -9,7 +9,7 @@
 :root {
   --color-purple: #4B2E6F;
   --color-blue: #5C6FC7;
-  --color-cream: #E9E4C9;
+  --color-cream: #ffffff;
   --color-black: #000000;
   --color-white: #ffffff;
   --color-gray-dim: #444444;
@@ -314,6 +314,27 @@ body::after {
   }
 }
 
+/* ---------- Flicker Group (content flicker) ----------
+   Each direct child of .flicker-group gets its own flicker-in animation.
+   Delays are set via inline style (animationDelay) and play state is
+   controlled via animationPlayState (paused until IntersectionObserver fires). */
+.flicker-group {
+  opacity: 1;
+}
+
+.flicker-child {
+  opacity: 0;
+  animation: flicker-in 0.4s ease-out forwards;
+}
+
+/* Under reduced motion: instant appear, no flicker */
+@media (prefers-reduced-motion: reduce) {
+  .flicker-child {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 /* ---------- Blink Animation ----------
    For the "click/tap the key" hint — steady on/off pulse, not the flicker-in warm-up. */
 @keyframes blink {
@@ -352,18 +373,19 @@ body::after {
 }
 
 /* ---------- Glow Text Utility ---------- */
+/* Cool white / blue-white glow — suits the blue/purple palette, no warm cream tint. */
 .text-glow {
   text-shadow:
-    0 0 8px rgba(233, 228, 201, 0.3),
-    0 0 20px rgba(92, 111, 199, 0.2),
-    0 0 40px rgba(75, 46, 111, 0.15);
+    0 0 8px rgba(200, 220, 255, 0.4),
+    0 0 20px rgba(92, 111, 199, 0.3),
+    0 0 40px rgba(75, 46, 111, 0.2);
 }
 
 .text-glow-strong {
   text-shadow:
-    0 0 10px rgba(233, 228, 201, 0.5),
-    0 0 25px rgba(92, 111, 199, 0.35),
-    0 0 50px rgba(75, 46, 111, 0.25);
+    0 0 10px rgba(200, 220, 255, 0.6),
+    0 0 25px rgba(92, 111, 199, 0.45),
+    0 0 50px rgba(75, 46, 111, 0.3);
 }
 
 /* ---------- Aurora Background ----------

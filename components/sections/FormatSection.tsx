@@ -5,7 +5,7 @@
 "use client";
 
 import { SectionWrapper } from "@/components/SectionWrapper";
-import { KineticText } from "@/components/KineticText";
+import { FlickerGroup } from "@/components/FlickerGroup";
 
 export function FormatSection() {
   return (
@@ -15,24 +15,26 @@ export function FormatSection() {
         <div className="absolute left-5 top-1/2 -translate-y-1/2 sm:left-8 md:left-[6%] max-w-md text-left">
           <div className="mb-4 ">
             <h1 className="text-2xl font-bold font-mono text-glow">
-              <KineticText text="Event Format" />
+              Event Format
             </h1>
           </div>
-          <p className="text-gray-mid leading-7">
-            Most hackathons end when the timer hits zero. We give you the funding and the runway to actually finish what you started.
-          </p>
-          <div className="my-6">
-            <h2 className="pb-1 font-mono uppercase tracking-wide">Phase I - The Hackathon:</h2>
-            <p>A 7-hour sprint where teams conceptualize, design, and build a solution to any one of the problem statements presented to them.</p>
-          </div>
-          <div className="mb-6">
-            <h2 className="pb-1 font-mono uppercase tracking-wide">Development Phase:</h2>
-            <p>Top 5 teams from Phase I will receive a &#8377;10,000 development grant and 3 weeks to refine their prototypes and work on their final pitch.</p>
-          </div>
-          <div className="mb-6">
-            <h2 className="pb-1 font-mono uppercase tracking-wide">Phase II - Demo Day:</h2>
-            <p>The top 5 teams present their finished products to a panel of industry judges. The top 3 teams will be offered internship opportunities with partnership companies along with cash prizes.</p>
-          </div>
+          <FlickerGroup groupId="format-left">
+            <p className="text-gray-mid leading-7">
+              Most hackathons end when the timer hits zero. We give you the funding and the runway to actually finish what you started.
+            </p>
+            <div className="my-6">
+              <h2 className="pb-1 font-mono uppercase tracking-wide">Phase I - The Hackathon:</h2>
+              <p>A 7-hour sprint where teams conceptualize, design, and build a solution to any one of the problem statements presented to them.</p>
+            </div>
+            <div className="mb-6">
+              <h2 className="pb-1 font-mono uppercase tracking-wide">Development Phase:</h2>
+              <p>Top 5 teams from Phase I will receive a &#8377;10,000 development grant and 3 weeks to refine their prototypes and work on their final pitch.</p>
+            </div>
+            <div className="mb-6">
+              <h2 className="pb-1 font-mono uppercase tracking-wide">Phase II - Demo Day:</h2>
+              <p>The top 5 teams present their finished products to a panel of industry judges. The top 3 teams will be offered internship opportunities with partnership companies along with cash prizes.</p>
+            </div>
+          </FlickerGroup>
         </div>
 
         {/* Right rail — full, vertically centred */}
