@@ -206,19 +206,19 @@ const HALO_BLUE_REST_ANGLE = Math.atan2(-1, 1); // -45deg, up-and-right
    then reads only while the key is still translucent, and vanishes the moment
    the key goes opaque. Both scales must keep the bright plateau OUTSIDE that
    ink so light persists at rest. The core reaches ~19 units past the key edge. */
-const HALO_CORE_BLUR = 12;
-const HALO_SCATTER_BLUR = 28;
-const HALO_CORE_SCALE = 1.42;
-const HALO_SCATTER_SCALE = 1.85;
+const HALO_CORE_BLUR = 18; // increased for more diffusion
+const HALO_SCATTER_BLUR = 40; // increased for softer edges
+const HALO_CORE_SCALE = 1.25; // tighter core
+const HALO_SCATTER_SCALE = 1.55; // tighter scatter
 
 /* Additive, so the two colours SUM where they overlap and clip toward white.
    The opposing offsets keep that overlap small and off-centre, which is what
    lets the core stay this bright while still reading as saturated colour
    instead of blowing out. */
-const HALO_CORE_BLUE = 0.9;
-const HALO_CORE_VIOLET = 0.75;
-const HALO_SCATTER_BLUE = 0.34;
-const HALO_SCATTER_VIOLET = 0.3;
+const HALO_CORE_BLUE = 1.0;
+const HALO_CORE_VIOLET = 0.92; // stronger violet
+const HALO_SCATTER_BLUE = 0.42;
+const HALO_SCATTER_VIOLET = 0.45; // stronger violet
 
 /* Cursor-driven light motion.
 
@@ -238,9 +238,7 @@ const HALO_SCATTER_VIOLET = 0.3;
    These mirror the physics effect's STIFFNESS/DAMPING (those are local to that
    effect, hence duplicated here with matching values). */
 const HALO_ORBIT_RADIUS = 22;
-const HALO_ANG_STIFF = 0.014;
-const HALO_VIOLET_STIFF = 0.009; // trails -> non-rigid pair
-const HALO_ANG_DAMP = 0.82;
+const HALO_LERP = 0.03; // light directional lerp (no spring physics)
 /* Radius around the key centre (viewBox units) within which the cursor angle is
    treated as undefined and the last angle is held, so the light doesn't spin
    when the pointer is sitting on the key. Key is ~95x77 units, so this keeps the
@@ -424,15 +422,13 @@ export function BlobMorph({ progress = 0 }: BlobMorphProps) {
   const meshGroupRef = useRef<SVGGElement>(null);
   const logoImageRef = useRef<SVGImageElement>(null);
 
-  /* Halo orbit state: one spring (angle + velocity) per colour. Target is the
-     raw cursor angle in radians around the key centre, or null when there's no
-     cursor (touch / reduced motion / left the window) — then the springs ease
-     back to the resting opposed positions. */
-  const haloTargetRef = useRef<number | null>(null);
-  const haloBlueAngRef = useRef(HALO_BLUE_REST_ANGLE);
-  const haloBlueVelRef = useRef(0);
-  const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
-  const haloVioletVelRef = useRef(0);
+/* Halo orbit state: one angle per colour. Target is the
+   raw cursor angle in radians around the key centre, or null when there's no
+   cursor (touch / reduced motion / left the window) — then the angles ease
+   back to the resting opposed positions via a light lerp (no spring). */
+const haloTargetRef = useRef<number | null>(null);
+const haloBlueAngRef = useRef(HALO_BLUE_REST_ANGLE);
+const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
 
   const targetRadiiRef = useRef<Float32Array>(generateFallbackRadii(NUM_POINTS));
   const keyImageRef = useRef<KeyImagePlacement | null>(null);
@@ -808,25 +804,17 @@ export function BlobMorph({ progress = 0 }: BlobMorphProps) {
         keyHaloRef.current.style.opacity = String(detailReveal);
       }
 
-      // Halo orbit. Two independent springs (same integrator shape as the blob
-      // physics) integrated on the orbit ANGLE, then each colour's centre is
-      // placed on a circle around the key — a slide, never a rotation of the
-      // shape. Blue springs to the cursor; violet springs to the opposite point
-      // with lower stiffness, so it trails and the pair deforms like light
-      // instead of moving as one rigid body. No cursor -> both ease back to rest.
+      // Halo orbit. Light directional lerp (no spring) — colours shift toward
+      // cursor angle with subtle smoothing. Violet stays opposite blue.
+      // No cursor -> both ease back to resting opposed positions.
       const blueTarget =
         haloTargetRef.current !== null ? haloTargetRef.current : HALO_BLUE_REST_ANGLE;
       const wrapPi = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
-      // Blue -> cursor.
+      // Blue -> lerp toward cursor target.
       let bd = wrapPi(blueTarget - haloBlueAngRef.current);
-      haloBlueVelRef.current = (haloBlueVelRef.current + bd * HALO_ANG_STIFF) * HALO_ANG_DAMP;
-      haloBlueAngRef.current += haloBlueVelRef.current;
-      // Violet -> diametrically opposite blue, softer so it lags.
-      const violetTarget = haloBlueAngRef.current + Math.PI;
-      let vd = wrapPi(violetTarget - haloVioletAngRef.current);
-      haloVioletVelRef.current =
-        (haloVioletVelRef.current + vd * HALO_VIOLET_STIFF) * HALO_ANG_DAMP;
-      haloVioletAngRef.current += haloVioletVelRef.current;
+      haloBlueAngRef.current += bd * HALO_LERP;
+      // Violet -> always diametrically opposite blue.
+      haloVioletAngRef.current = wrapPi(haloBlueAngRef.current + Math.PI);
 
       if (haloBlueRef.current) {
         // translate by the ORBIT OFFSET only — the <use> shapes already sit
