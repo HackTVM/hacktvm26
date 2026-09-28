@@ -19,19 +19,11 @@ export function ThemeSection() {
             </h1>
           </div>
           <p className="leading-7">If a system or space stands between a person and their independence, it's broken. You're here to build the sledgehammer</p>
-          <p className="text-gray-mid leading-7">
-            <b>Access Point</b> challenges students to design working technology that closes real, everyday gaps in accessibility and inclusivity, whether that's in navigating a space, communicating, learning, working or getting basic public information everyone else takes for granted.
+          <p className="leading-7">
+            <b>Access Point</b> challenges students to design working technology that closes real, everyday gaps in accessibility and inclusivity. Modern design optimizes for an "idealized default user," treating edge cases as an afterthought. We are here to shift that dynamic.</p>
+          <p className="leading-7">
+            Building for accessibility and inclusivity forces you to confront some of the most demanding problems in product design and engineering. Every system must be leaner, faster, and remarkably resilient, with zero room for error.
           </p>
-          <div className="leading-7">
-            <p>Expect to tackle friction across 5 primary dimensions:</p>
-            <ul className="list-disc pl-6 leading-7">
-              <li>Physical & Spatial Friction</li>
-              <li>Sensory & Perception Walls</li>
-              <li>Cognitive Complexity</li>
-              <li>Systemic & Public Barriers</li>
-              <li>Health Barriers</li>
-            </ul>
-          </div>
         </div>
 
         {/* Bottom-right slot */}
