@@ -27,7 +27,7 @@ export function HamburgerMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [showLinks, setShowLinks] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const buttonRef = useRef<HTMLDivElement>(null);
 
   // Toggle menu
   const toggleMenu = () => {
@@ -56,12 +56,7 @@ export function HamburgerMenu() {
   useEffect(() => {
     if (!isOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(e.target as Node) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(e.target as Node)
-      ) {
+      if (buttonRef.current && !buttonRef.current.contains(e.target as Node)) {
         toggleMenu();
       }
     };
@@ -106,13 +101,20 @@ export function HamburgerMenu() {
 
   return (
     <>
-      <button
+      <div
         ref={buttonRef}
-        type="button"
+        role="button"
+        tabIndex={0}
         aria-label={isOpen ? "Close menu" : "Open menu"}
         aria-expanded={isOpen}
         aria-controls="hamburger-menu"
         onClick={toggleMenu}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggleMenu();
+          }
+        }}
         style={{
           width: closedSize,
           height: closedSize,
@@ -153,6 +155,7 @@ export function HamburgerMenu() {
             animate={{ opacity: showLinks ? 1 : 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: isReducedMotion ? 0 : 0.2, delay: 0.3 }}
+            onClick={(e) => e.stopPropagation()}
           >
             <nav className="flex flex-col gap-3 w-full max-w-xs" aria-label="Navigation">
               {NAV_LINKS.map((link, index) => (
@@ -220,7 +223,7 @@ export function HamburgerMenu() {
             </motion.div>
           )}
         </AnimatePresence>
-      </button>
+      </div>
     </>
   );
 }
