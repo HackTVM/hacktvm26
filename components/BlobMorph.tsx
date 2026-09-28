@@ -206,19 +206,19 @@ const HALO_BLUE_REST_ANGLE = Math.atan2(-1, 1); // -45deg, up-and-right
    then reads only while the key is still translucent, and vanishes the moment
    the key goes opaque. Both scales must keep the bright plateau OUTSIDE that
    ink so light persists at rest. The core reaches ~19 units past the key edge. */
-const HALO_CORE_BLUR = 18; // increased for more diffusion
-const HALO_SCATTER_BLUR = 40; // increased for softer edges
-const HALO_CORE_SCALE = 1.25; // tighter core
-const HALO_SCATTER_SCALE = 1.55; // tighter scatter
+const HALO_CORE_BLUR = 18;
+const HALO_SCATTER_BLUR = 40;
+const HALO_CORE_SCALE = 1.15; // tighter core
+const HALO_SCATTER_SCALE = 1.55;
 
 /* Additive, so the two colours SUM where they overlap and clip toward white.
    The opposing offsets keep that overlap small and off-centre, which is what
    lets the core stay this bright while still reading as saturated colour
    instead of blowing out. */
-const HALO_CORE_BLUE = 1.0;
-const HALO_CORE_VIOLET = 0.92; // stronger violet
+const HALO_CORE_BLUE = 1.1;
+const HALO_CORE_VIOLET = 1.0;
 const HALO_SCATTER_BLUE = 0.42;
-const HALO_SCATTER_VIOLET = 0.45; // stronger violet
+const HALO_SCATTER_VIOLET = 0.45;
 
 /* Cursor-driven light motion.
 
