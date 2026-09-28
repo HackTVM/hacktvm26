@@ -29,11 +29,17 @@ export function KeySection({ progress }: KeySectionProps) {
     return () => window.clearTimeout(timer);
   }, [isResolved]);
 
-  const links = [
-    { label: "Answers", href: "#" },
-    { label: "Builds", href: "#" },
-    { label: "Moments", href: "#" },
-  ] as const;
+  interface NavLink {
+  label: string;
+  href: string;
+  disabled?: boolean;
+}
+
+const links: readonly NavLink[] = [
+  { label: "Answers", href: "/faq" },
+  { label: "Builds", href: "#", disabled: true },
+  { label: "Moments", href: "#", disabled: true },
+];
 
   return (
     <SectionWrapper id="key" title="The Key">
@@ -48,8 +54,18 @@ export function KeySection({ progress }: KeySectionProps) {
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    className="font-mono text-sm sm:text-base uppercase tracking-[0.2em] text-cream text-glow hover:text-cream/80 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream block sm:inline-block text-center sm:text-left"
+                    className={`
+                      flex items-center justify-center
+                      font-mono text-sm sm:text-base uppercase tracking-[0.2em]
+                      rounded px-4 py-2 transition-colors
+                      ${link.disabled
+                        ? "text-gray-500 cursor-not-allowed"
+                        : "text-white text-glow hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white block sm:inline-block text-center sm:text-left"
+                      }
+                    `}
                     aria-label={link.label}
+                    aria-disabled={link.disabled}
+                    tabIndex={link.disabled ? -1 : 0}
                   >
                     {link.label}
                   </a>
