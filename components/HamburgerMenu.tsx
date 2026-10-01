@@ -14,7 +14,6 @@ interface NavLink {
 
 const NAV_LINKS: NavLink[] = [
   { label: "Entry", href: "/" },
-  { label: "Answers", href: "/faq" },
   { label: "Builds", href: "#", disabled: true, comingSoon: true },
   { label: "Moments", href: "#", disabled: true, comingSoon: true },
 ];

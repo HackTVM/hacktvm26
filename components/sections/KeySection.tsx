@@ -30,16 +30,15 @@ export function KeySection({ progress }: KeySectionProps) {
   }, [isResolved]);
 
   interface NavLink {
-  label: string;
-  href: string;
-  disabled?: boolean;
-}
+    label: string;
+    href: string;
+    disabled?: boolean;
+  }
 
-const links: readonly NavLink[] = [
-  { label: "Answers", href: "/faq" },
-  { label: "Builds", href: "#", disabled: true },
-  { label: "Moments", href: "#", disabled: true },
-];
+  const links: readonly NavLink[] = [
+    { label: "Builds", href: "#", disabled: true },
+    { label: "Moments", href: "#", disabled: true },
+  ];
 
   return (
     <SectionWrapper id="key" title="The Key">
