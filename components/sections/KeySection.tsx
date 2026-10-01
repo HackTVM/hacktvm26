@@ -45,7 +45,7 @@ export function KeySection({ progress }: KeySectionProps) {
       <div className="h-full w-full flex flex-col items-center justify-end pb-36">
         {showLinks && (
           <nav
-            className="w-full max-w-[80%] lg:max-w-[50%] opacity-0 animate-fade-in transition-opacity duration-700"
+            className="w-full max-w-[50%] lg:max-w-1/3 opacity-0 animate-fade-in transition-opacity duration-700"
             aria-label="Navigation"
           >
             <ul className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-0">
