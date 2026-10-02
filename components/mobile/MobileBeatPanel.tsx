@@ -246,7 +246,7 @@ export function MobileBeatPanel({ beat, isKeyResolved, isKeyBeat }: MobileBeatPa
             {renderContent(beat.content)}
             {isKeyBeat && showLinks && (
               <nav
-                className="mx-auto w-full max-w-[80%] opacity-0 animate-fade-in transition-opacity duration-700"
+                className="mx-auto w-full max-w-[80%] rounded-lg border border-white/10 bg-black/40 px-4 py-5 backdrop-blur-sm opacity-0 animate-fade-in transition-opacity duration-700"
                 aria-label="Navigation"
               >
                 <ul className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-0">
