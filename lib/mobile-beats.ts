@@ -122,8 +122,8 @@ export const BEATS: readonly Beat[] = [
       kind: "facts",
       facts: [
         {
-          label: "Registrations",
-          value: "7:00 to 8:00",
+          label: "7:00 to 8:00",
+          value: "Registrations",
         },
         {
           label: "8:00",

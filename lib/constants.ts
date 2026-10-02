@@ -59,6 +59,4 @@ export const DURATIONS = {
   fast: 0.25,
   /** Instant — for reduced motion */
   none: 0,
-  /** Loading screen flicker word duration */
-  flicker: 0.4,
 } as const;

@@ -40,7 +40,13 @@ const links: readonly NavLink[] = [
   { label: "Moments", href: "#", disabled: true },
 ];
 
-function renderContent(content: BeatContent) {
+/* `beatId` keys the flicker memory: the article below is remounted on every
+   beat swap, so each group needs to know whether this beat has already
+   played. `revealOnMount` because .mobile-panel is position:fixed — it is on
+   screen the whole time, so the beat swap is the only real reveal signal, and
+   several of these groups are `display: contents` wrappers that an
+   IntersectionObserver cannot observe at all (no box => ratio 0 forever). */
+function renderContent(content: BeatContent, beatId: string) {
   switch (content.kind) {
     case "hero":
       return (
@@ -48,7 +54,7 @@ function renderContent(content: BeatContent) {
           <h1 className="font-mono text-xl font-bold leading-tight text-cream text-glow">
             {content.title}
           </h1>
-          <FlickerGroup groupId={`mobile-hero-${content.title}`}>
+          <FlickerGroup revealOnMount onceKey={beatId} groupId={`mobile-hero-${content.title}`}>
             <p className="mt-1 font-mono text-[15px] uppercase tracking-wide text-blue">
               {content.tagline}
             </p>
@@ -67,7 +73,7 @@ function renderContent(content: BeatContent) {
               key={fact.label}
               className="flex items-baseline justify-between gap-3 border-b border-white/10 py-2.5"
             >
-              <FlickerGroup groupId={`mobile-facts-${fact.label}`} className="contents">
+              <FlickerGroup revealOnMount onceKey={beatId} groupId={`mobile-facts-${fact.label}`} className="contents">
                 <span className="font-mono text-[13px] uppercase tracking-[0.15em] text-gray-mid">
                   {fact.label}
                 </span>
@@ -86,7 +92,7 @@ function renderContent(content: BeatContent) {
           <h2 className="font-mono text-lg font-bold text-cream text-glow">
             {content.title}
           </h2>
-          <FlickerGroup groupId={`mobile-statement-${content.title}-body`}>
+          <FlickerGroup revealOnMount onceKey={beatId} groupId={`mobile-statement-${content.title}-body`}>
             <p className="mt-2 text-[15px] leading-[1.5] text-gray-light">
               {content.body}
             </p>
@@ -101,7 +107,7 @@ function renderContent(content: BeatContent) {
             {content.title}
           </h2>
           {content.intro && (
-            <FlickerGroup groupId={`mobile-list-${content.title}-intro`}>
+            <FlickerGroup revealOnMount onceKey={beatId} groupId={`mobile-list-${content.title}-intro`}>
               <p className="mt-1.5 text-[15px] leading-[1.5] text-gray-mid">
                 {content.intro}
               </p>
@@ -114,7 +120,7 @@ function renderContent(content: BeatContent) {
                 className="flex gap-2.5 text-[15px] leading-[1.45] text-gray-light"
               >
                 <span aria-hidden="true" className="mt-[0.6em] h-1 w-1 shrink-0 rounded-full bg-blue" />
-                <FlickerGroup groupId={`mobile-list-${content.title}-item-${item}`} className="contents">
+                <FlickerGroup revealOnMount onceKey={beatId} groupId={`mobile-list-${content.title}-item-${item}`} className="contents">
                   <span>{item}</span>
                 </FlickerGroup>
               </li>
@@ -130,7 +136,7 @@ function renderContent(content: BeatContent) {
             {content.title}
           </h2>
           {content.intro && (
-            <FlickerGroup groupId={`mobile-points-${content.title}-intro`}>
+            <FlickerGroup revealOnMount onceKey={beatId} groupId={`mobile-points-${content.title}-intro`}>
               <p className="mt-1.5 text-[15px] leading-[1.5] text-gray-mid">
                 {content.intro}
               </p>
@@ -142,7 +148,7 @@ function renderContent(content: BeatContent) {
                 <h3 className="font-mono text-[15px] font-bold text-cream text-glow">
                   {entry.heading}
                 </h3>
-                <FlickerGroup groupId={`mobile-points-${content.title}-entry-${entry.heading}-body`} className="contents">
+                <FlickerGroup revealOnMount onceKey={beatId} groupId={`mobile-points-${content.title}-entry-${entry.heading}-body`} className="contents">
                   <p className="mt-0.5 text-[15px] leading-[1.5] text-gray-light">
                     {entry.body}
                   </p>
@@ -159,7 +165,7 @@ function renderContent(content: BeatContent) {
           <h2 className="font-mono text-lg font-bold text-cream text-glow">
             {content.title}
           </h2>
-          <FlickerGroup groupId={`mobile-note-${content.title}-body`}>
+          <FlickerGroup revealOnMount onceKey={beatId} groupId={`mobile-note-${content.title}-body`}>
             <p className="mt-1.5 text-[15px] leading-[1.5] text-gray-light">
               {content.body}
             </p>
@@ -262,7 +268,7 @@ export function MobileBeatPanel({ beat, isKeyResolved, isKeyBeat }: MobileBeatPa
                 : { duration: BEAT_ENTER_DURATION, ease: "easeOut" }
             }
           >
-            {renderContent(beat.content)}
+            {renderContent(beat.content, beat.id)}
             {isKeyBeat && showLinks && (
               <nav
                 className="mx-auto w-full max-w-[80%] px-4 py-5 opacity-0 animate-fade-in transition-opacity duration-700"

@@ -293,7 +293,7 @@ body::after {
 }
 
 /* ---------- Flicker Animation ----------
-   Used by LoadingScreen (whole words) and KineticText (per-letter heading
+   Used by LoadingScreen (whole words) and FlickerGroup (staggered content
    reveal). Both render through .flicker-word; delays are set via inline
    style on each element.
    -------------------------------------------------------------------------- */

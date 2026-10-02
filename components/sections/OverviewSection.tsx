@@ -27,15 +27,21 @@ export function OverviewSection() {
           <h2 className="py-1 font-mono uppercase tracking-wide text-xl font-bold mb-2 text-glow">
             Overview
           </h2>
-          <ul className="text-gray-mid leading-8 text-lg">
-            <FlickerGroup className="space-y-1" groupId="overview-bottom">
-              <li><b>Date:</b> October 10, 2026</li>
-              <li><b>Venue:</b> The School of the Good Shepherd</li>
-              <li><b>Eligibility:</b> Grades 8 to 12</li>
-              <li><b>Entry Fee:</b> &#8377;1200 per team(after screening)</li>
-              <li><b>The Opportunity:</b> &#8377;10,000 development grant for finalist teams and tech-internships, along with cash prizes, for top 3 winners</li>
-            </FlickerGroup>
-          </ul>
+          {/* Renders as the list itself so the five items are owned by a <ul>
+              (a div wrapper between the list and its items drops the list
+              semantics), while each item still gets its own flicker delay. */}
+          <FlickerGroup
+            as="ul"
+            childAs="li"
+            groupId="overview-bottom"
+            className="space-y-1 text-gray-mid leading-8 text-lg"
+          >
+            <span><b>Date:</b> October 10, 2026</span>
+            <span><b>Venue:</b> The School of the Good Shepherd</span>
+            <span><b>Eligibility:</b> Grades 8 to 12</span>
+            <span><b>Entry Fee:</b> &#8377;1200 per team(after screening)</span>
+            <span><b>The Opportunity:</b> &#8377;10,000 development grant for finalist teams and tech-internships, along with cash prizes, for top 3 winners</span>
+          </FlickerGroup>
         </div>
       </div>
     </SectionWrapper>

@@ -44,7 +44,7 @@ export function FormatSection() {
           <h2 className="text-2xl font-bold font-mono text-glow">
             Itinerary
           </h2>
-          <FlickerGroup className="font-mono uppercase tracking-wide space-y-4">
+          <FlickerGroup groupId="format-itinerary" className="font-mono uppercase tracking-wide space-y-4">
             <div className="grid grid-cols-3 w-full items-center">
               <p className="text-left text-base">07:00 to 08:00</p>
               <p className="text-center text-base">—</p>
