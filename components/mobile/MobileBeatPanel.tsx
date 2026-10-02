@@ -67,12 +67,14 @@ function renderContent(content: BeatContent) {
               key={fact.label}
               className="flex items-baseline justify-between gap-3 border-b border-white/10 py-2.5"
             >
-              <span className="font-mono text-[13px] uppercase tracking-[0.15em] text-gray-mid">
-                {fact.label}
-              </span>
-              <span className="text-right text-[15px] leading-snug text-cream">
-                {fact.value}
-              </span>
+              <FlickerGroup groupId={`mobile-facts-${fact.label}`} className="contents">
+                <span className="font-mono text-[13px] uppercase tracking-[0.15em] text-gray-mid">
+                  {fact.label}
+                </span>
+                <span className="text-right text-[15px] leading-snug text-cream">
+                  {fact.value}
+                </span>
+              </FlickerGroup>
             </div>
           ))}
         </div>
@@ -84,9 +86,11 @@ function renderContent(content: BeatContent) {
           <h2 className="font-mono text-lg font-bold text-cream text-glow">
             {content.title}
           </h2>
-          <p className="mt-2 text-[15px] leading-[1.5] text-gray-light">
-            {content.body}
-          </p>
+          <FlickerGroup groupId={`mobile-statement-${content.title}-body`}>
+            <p className="mt-2 text-[15px] leading-[1.5] text-gray-light">
+              {content.body}
+            </p>
+          </FlickerGroup>
         </div>
       );
 
@@ -97,9 +101,11 @@ function renderContent(content: BeatContent) {
             {content.title}
           </h2>
           {content.intro && (
-            <p className="mt-1.5 text-[15px] leading-[1.5] text-gray-mid">
-              {content.intro}
-            </p>
+            <FlickerGroup groupId={`mobile-list-${content.title}-intro`}>
+              <p className="mt-1.5 text-[15px] leading-[1.5] text-gray-mid">
+                {content.intro}
+              </p>
+            </FlickerGroup>
           )}
           <ul className="mt-3 flex flex-col gap-2">
             {content.items.map((item) => (
@@ -108,7 +114,9 @@ function renderContent(content: BeatContent) {
                 className="flex gap-2.5 text-[15px] leading-[1.45] text-gray-light"
               >
                 <span aria-hidden="true" className="mt-[0.6em] h-1 w-1 shrink-0 rounded-full bg-blue" />
-                <span>{item}</span>
+                <FlickerGroup groupId={`mobile-list-${content.title}-item-${item}`} className="contents">
+                  <span>{item}</span>
+                </FlickerGroup>
               </li>
             ))}
           </ul>
@@ -122,9 +130,11 @@ function renderContent(content: BeatContent) {
             {content.title}
           </h2>
           {content.intro && (
-            <p className="mt-1.5 text-[15px] leading-[1.5] text-gray-mid">
-              {content.intro}
-            </p>
+            <FlickerGroup groupId={`mobile-points-${content.title}-intro`}>
+              <p className="mt-1.5 text-[15px] leading-[1.5] text-gray-mid">
+                {content.intro}
+              </p>
+            </FlickerGroup>
           )}
           <div className="mt-3 flex flex-col gap-3.5">
             {content.entries.map((entry) => (
@@ -132,9 +142,11 @@ function renderContent(content: BeatContent) {
                 <h3 className="font-mono text-[15px] font-bold text-cream text-glow">
                   {entry.heading}
                 </h3>
-                <p className="mt-0.5 text-[15px] leading-[1.5] text-gray-light">
-                  {entry.body}
-                </p>
+                <FlickerGroup groupId={`mobile-points-${content.title}-entry-${entry.heading}-body`} className="contents">
+                  <p className="mt-0.5 text-[15px] leading-[1.5] text-gray-light">
+                    {entry.body}
+                  </p>
+                </FlickerGroup>
               </div>
             ))}
           </div>
@@ -147,9 +159,11 @@ function renderContent(content: BeatContent) {
           <h2 className="font-mono text-lg font-bold text-cream text-glow">
             {content.title}
           </h2>
-          <p className="mt-1.5 text-[15px] leading-[1.5] text-gray-light">
-            {content.body}
-          </p>
+          <FlickerGroup groupId={`mobile-note-${content.title}-body`}>
+            <p className="mt-1.5 text-[15px] leading-[1.5] text-gray-light">
+              {content.body}
+            </p>
+          </FlickerGroup>
         </div>
       );
 

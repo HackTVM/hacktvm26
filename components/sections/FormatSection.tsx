@@ -33,7 +33,7 @@ export function FormatSection() {
               </div>
               <div>
                 <h2 className="pb-1 font-mono uppercase tracking-wide text-lg font-bold">Demo Day &mdash; 31 Oct 2026</h2>
-                <p className="text-lg">The top 5 teams present their finished products to a panel of industry judges. The top 3 teams will be offered internship opportunities with partnership companies along with cash prizes.</p>
+                <p className="text-lg">The top 5 teams present their finished products to a panel of industry judges. The top 3 teams will be offered internship opportunities with partnership companies along with cash prizes worth &#8377;30,000.</p>
               </div>
             </FlickerGroup>
           </div>
@@ -48,7 +48,7 @@ export function FormatSection() {
             <div className="grid grid-cols-3 w-full items-center">
               <p className="text-left text-base">07:00 to 08:00</p>
               <p className="text-center text-base">—</p>
-              <p className="text-right text-base">Registration Window</p>
+              <p className="text-right text-base">Registrations</p>
             </div>
             <div className="grid grid-cols-3 w-full items-center">
               <p className="text-left text-base">08:00</p>
@@ -59,17 +59,12 @@ export function FormatSection() {
             <div className="grid grid-cols-3 w-full items-center">
               <p className="text-left text-base">08:00 to 08:30</p>
               <p className="text-center text-base">—</p>
-              <p className="text-right text-base">Ideation Phase</p>
+              <p className="text-right text-base">Ideation Time</p>
             </div>
             <div className="grid grid-cols-3 w-full items-center">
-              <p className="text-left text-base">08:30</p>
+              <p className="text-left text-base">08:30 to 10:30</p>
               <p className="text-center text-base">—</p>
-              <p className="text-right text-base">Component Window Opens</p>
-            </div>
-            <div className="grid grid-cols-3 w-full items-center">
-              <p className="text-left text-base">10:30</p>
-              <p className="text-center text-base">—</p>
-              <p className="text-right text-base">Component Window Closes</p>
+              <p className="text-right text-base">Component Desk Window</p>
             </div>
             <div className="grid grid-cols-3 w-full items-center">
               <p className="text-left text-base">15:00</p>
@@ -77,19 +72,19 @@ export function FormatSection() {
               <p className="text-right text-base">Hackathon Ends</p>
             </div>
             <div className="grid grid-cols-3 w-full items-center">
-              <p className="text-left text-base">15:00 to 16:00</p>
+              <p className="text-left text-base">15:15 to 16:15</p>
               <p className="text-center text-base">—</p>
               <p className="text-right text-base">Lunch Break</p>
             </div>
             <div className="grid grid-cols-3 w-full items-center">
-              <p className="text-left text-base">16:00 to 19:00</p>
+              <p className="text-left text-base">15:15 to 18:45</p>
               <p className="text-center text-base">—</p>
               <p className="text-right text-base">Judging</p>
             </div>
             <div className="grid grid-cols-3 w-full items-center">
-              <p className="text-left text-base">19:00 to 20:00</p>
+              <p className="text-left text-base">19:00 to 19:45</p>
               <p className="text-center text-base">—</p>
-              <p className="text-right text-base">Closing Ceremony</p>
+              <p className="text-right text-base">Valedictory</p>
             </div>
           </FlickerGroup>
           {/* TODO(dates): registration was extended — update this row when new dates are final */}
