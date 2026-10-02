@@ -182,11 +182,8 @@ body {
 
 /* Full-screen transparent scroller of invisible spacers. This is the ONLY
      scroll container on mobile (no nested scroll, no horizontal scroll).
-     `proximity` rather than `mandatory`: each spacer is still a snap point,
-     but a fling is no longer forced to the nearest one, so a flick travels as
-     far as its momentum carries and can rest between beats. The blob tracks
-     the scroll continuously; MobileExperience defers the beat commit to
-     scroll-idle so the panel crossfades once onto whatever beat it lands on. */
+     Each spacer is a snap point, so one gesture settles on exactly one beat
+     (one flick = one beat). */
   .mobile-scroller {
     position: absolute;
     inset: 0;
@@ -195,7 +192,7 @@ body {
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior-y: none;
-    scroll-snap-type: y proximity;
+    scroll-snap-type: y mandatory;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE/Edge */
   }
@@ -205,19 +202,11 @@ body {
 
   /* Each spacer is a snap point. stop:always fought every programmatic
      scroll (dot taps, restore) — it forced an overshoot to the NEXT port;
-     plain start aligns to the nearest port, which is what real finger flicks
-     (with momentum) land on and what smooth scrolls end at. */
+     mandatory + plain start aligns to the nearest port, which is what real
+     finger flicks (with momentum) land on and what smooth scrolls end at. */
   [data-mobile-spacer] {
     scroll-snap-align: start;
   }
-}
-
-/* ---------- A/B Isolation: ?snap ----------
-   Dev-only flag (set from the URL in MobileExperience). The mobile per-beat
-   snap is `proximity` by default; this pins it back to `mandatory` so the
-   looser travel can be compared against hard one-beat stops on device. */
-body.snap .mobile-scroller {
-  scroll-snap-type: y mandatory;
 }
 
 /* ---------- Snap Sections ---------- */
