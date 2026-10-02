@@ -18,6 +18,19 @@ import { FlickerGroup } from "@/components/FlickerGroup";
 
 const warnedBeats = new Set<string>();
 
+interface NavLink {
+  label: string;
+  href: string;
+  disabled?: boolean;
+}
+
+/* Mirrors the desktop KeySection: the destination pages don't exist yet, so
+   both links render in the disabled treatment until they ship. */
+const links: readonly NavLink[] = [
+  { label: "Builds", href: "#", disabled: true },
+  { label: "Moments", href: "#", disabled: true },
+];
+
 function renderContent(content: BeatContent) {
   switch (content.kind) {
     case "hero":
@@ -132,13 +145,10 @@ function renderContent(content: BeatContent) {
       );
 
     case "key":
-      return (
-        <div className="flex h-full flex-col items-center justify-center text-center">
-          <p className="max-w-[16rem] text-[15px] leading-[1.5] text-cream">
-            {content.hint}
-          </p>
-        </div>
-      );
+      /* Nothing renders here — the panel stays empty until the Builds /
+         Moments links fade in below. KeyHitArea's blinking prompt in the blob
+         stage carries the affordance. */
+      return null;
   }
 }
 
@@ -203,12 +213,6 @@ export function MobileBeatPanel({ beat, isKeyResolved, isKeyBeat }: MobileBeatPa
     };
   }, [beat.id]);
 
-  const links = [
-    { label: "Answers", href: "#" },
-    { label: "Builds", href: "#" },
-    { label: "Moments", href: "#" },
-  ] as const;
-
   return (
     <div ref={boxRef} className="mobile-panel">
       <div className="h-full">
@@ -216,7 +220,12 @@ export function MobileBeatPanel({ beat, isKeyResolved, isKeyBeat }: MobileBeatPa
           <motion.article
             key={beat.id}
             data-beat={beat.id}
-            className="h-full overflow-hidden px-5 pt-1 pb-1"
+            className={`h-full overflow-hidden px-5 pt-1 pb-1 ${
+              /* The key beat renders no content of its own, so centring the
+                 article vertically centres the links. Every other beat stays
+                 top-aligned. */
+              isKeyBeat ? "flex flex-col justify-center" : ""
+            }`}
             initial={
               isReducedMotion
                 ? { opacity: 0 }
@@ -237,16 +246,27 @@ export function MobileBeatPanel({ beat, isKeyResolved, isKeyBeat }: MobileBeatPa
             {renderContent(beat.content)}
             {isKeyBeat && showLinks && (
               <nav
-                className="mt-4 w-full max-w-[80%] opacity-0 animate-fade-in transition-opacity duration-700"
+                className="mx-auto w-full max-w-[80%] opacity-0 animate-fade-in transition-opacity duration-700"
                 aria-label="Navigation"
               >
-                <ul className="flex flex-col items-center gap-4">
+                <ul className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-0">
                   {links.map((link) => (
                     <li key={link.label}>
                       <a
                         href={link.href}
-                        className="font-mono text-sm uppercase tracking-[0.2em] text-cream text-glow hover:text-cream/80 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream block text-center"
+                        className={`
+                          flex items-center justify-center
+                          font-mono text-sm uppercase tracking-[0.2em]
+                          rounded px-4 py-2 transition-colors
+                          ${
+                            link.disabled
+                              ? "text-gray-500 cursor-not-allowed"
+                              : "text-cream text-glow hover:text-cream/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream block text-center"
+                          }
+                        `}
                         aria-label={link.label}
+                        aria-disabled={link.disabled}
+                        tabIndex={link.disabled ? -1 : 0}
                       >
                         {link.label}
                       </a>

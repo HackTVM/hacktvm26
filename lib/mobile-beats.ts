@@ -27,7 +27,7 @@ export type BeatContent =
       entries: { heading: string; body: string }[];
     }
   | { kind: "note"; title: string; body: string }
-  | { kind: "key"; hint: string };
+  | { kind: "key" };
 
 export interface Beat {
   id: string;
@@ -254,7 +254,6 @@ export const BEATS: readonly Beat[] = [
     weight: 0.8,
     content: {
       kind: "key",
-      hint: "Your key is ready. Tap the key above to open registration and contact details.",
     },
   },
 ];
