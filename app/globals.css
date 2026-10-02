@@ -411,6 +411,30 @@ body::after {
   }
 }
 
+/* ---------- Hint Pulse ----------
+   Slower, shallower sibling of the key hint's `blink`. The loading screen is a
+   static screen someone stares at while deciding whether "in" is clickable, so
+   a 2.4s cycle dipping only to 0.45 reads as a nudge rather than an alarm.
+   Deliberately NOT reusing .animate-blink — that 1.5s dip to 0.3 is tuned to
+   sit near a morphing blob the eye is already tracking, not to sit under
+   centred body copy. Applied to both the "click in" hint and the "in" glyph
+   itself, so the two pulse as one gesture. */
+@keyframes pulse-hint {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.animate-pulse-hint {
+  animation: pulse-hint 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-hint {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 /* ---------- Fade-in Animation ----------
    For navigation links appearing after key resolves. */
 @keyframes fade-in {
