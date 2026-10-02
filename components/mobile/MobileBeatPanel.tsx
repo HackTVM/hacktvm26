@@ -1,6 +1,6 @@
 /**
  * HackTVM'26 — Access Point
- * MobileBeatPanel — the fixed bottom-half "content window".
+ * MobileBeatPanel — the fixed bottom "content window".
  *
  * Renders exactly one beat at a time with a quick crossfade + vertical
  * translate. The panel root is pointer-events-none so touches fall through to
@@ -13,7 +13,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useApp } from "@/context/AppContext";
-import { SECTION_IDS, SECTION_LABELS } from "@/lib/constants";
 import type { Beat, BeatContent } from "@/lib/mobile-beats";
 import { FlickerGroup } from "@/components/FlickerGroup";
 
@@ -196,8 +195,6 @@ export function MobileBeatPanel({ beat, isKeyResolved, isKeyBeat }: MobileBeatPa
     };
   }, [beat.id]);
 
-  const phaseLabel = SECTION_LABELS[SECTION_IDS[beat.phase]];
-
   const links = [
     { label: "Answers", href: "#" },
     { label: "Builds", href: "#" },
@@ -229,12 +226,6 @@ export function MobileBeatPanel({ beat, isKeyResolved, isKeyBeat }: MobileBeatPa
                 : { duration: 0.22, ease: "easeOut" }
             }
           >
-            <p
-              aria-hidden="true"
-              className="mb-2 font-mono text-[12px] uppercase tracking-[0.22em] text-blue"
-            >
-              {phaseLabel}
-            </p>
             {renderContent(beat.content)}
             {isKeyBeat && showLinks && (
               <nav

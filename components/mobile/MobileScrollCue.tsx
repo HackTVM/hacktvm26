@@ -19,9 +19,13 @@ export function MobileScrollCue({ visible }: MobileScrollCueProps) {
     <AnimatePresence>
       {visible && (
         <motion.div
-          className="pointer-events-none fixed left-0 right-0 z-20 flex flex-col items-center gap-1"
+          className="pointer-events-none fixed left-0 right-0 z-20 flex flex-col items-center"
           style={{
-            bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.75rem)",
+            /* Sits in the gap between the beat panel's bottom edge (4.5rem)
+               and the dot nav (2.5rem) — that gap is 40–72px up from the
+               viewport bottom, so a 16px chevron centered in it clears the
+               last line of beat text and rests just above the nav. */
+            bottom: "calc(env(safe-area-inset-bottom, 0px) + 3rem)",
           }}
           data-mobile-cue
           initial={{ opacity: 0 }}
@@ -30,9 +34,6 @@ export function MobileScrollCue({ visible }: MobileScrollCueProps) {
           transition={{ duration: isReducedMotion ? 0 : 0.4 }}
           aria-hidden="true"
         >
-          <span className="font-mono text-[12px] uppercase tracking-[0.22em] text-gray-light/80">
-            Scroll
-          </span>
           <motion.svg
             width="16"
             height="16"

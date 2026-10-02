@@ -100,13 +100,13 @@ export function MobileExperience() {
       {/* Aurora brand background — identical on every beat. */}
       <AuroraBackground />
 
-      {/* Top-half blob stage (positioned via .mobile-stage). */}
+      {/* Top 40% blob stage (positioned via .mobile-stage). */}
       <BlobStage className="mobile-stage">
         <BlobMorph progress={effectiveProgress} />
         <KeyHitArea progress={effectiveProgress} />
       </BlobStage>
 
-      {/* Bottom-half beat content (fixed; pointer-events pass through) */}
+      {/* Bottom 60% beat content (fixed; pointer-events pass through) */}
       <MobileBeatPanel beat={activeBeat} isKeyResolved={isKeyResolved} isKeyBeat={isKeyBeat} />
 
       {beatIndex === 0 && <MobileScrollCue visible={!hasScrolled} />}

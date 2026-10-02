@@ -26,9 +26,9 @@
 
   /* Resolved blob size — single source of truth for the blob SVG box AND the
      key hit-area (which sizes itself as a % of this box so it always sits on
-     the key). Mobile (< 768px): sized by the viewport so it always fits the
-     top-half stage (min(78vw, 38dvh)). Desktop: fixed at 680px, matching the
-     old md:w-[680px] class, so the rendered size is identical. */
+     the key). Desktop: fixed at 680px, matching the old md:w-[680px] class,
+     so the rendered size is identical. Mobile (< 768px) overrides this to
+     size against its 40% stage band — see the media query below. */
   --blob-size: min(78vw, 38dvh);
 
   /* ---- Aurora background tunables ----
@@ -135,27 +135,47 @@ body {
 /* ---------- Mobile (< 768px) Layout ----------
    The mobile experience reuses the desktop pieces — BlobStage, BlobMorph,
    KeyHitArea (all sized off --blob-size) — but repositions the stage into the
-   top half of the viewport and renders beat content in a fixed bottom panel.
-   Desktop is untouched: these classes never apply at >= 768px.
+   top 40% of the viewport's usable band and renders beat content in a fixed
+   bottom panel taking the other 60%. Desktop is untouched: these rules never
+   apply at >= 768px.
    -------------------------------------------------------------------------- */
 @media (max-width: 767px) {
-  /* Shift the BlobStage's centered grid into a top-half band:
-     top edge clears the fixed header, height is 48dvh (bottom half is the
-     beat panel). Children stay centered via place-items-center. */
+  /* The usable band is the viewport minus the fixed header (3.5rem) and the
+     footer dot-nav reserve (4.5rem). Everything below is derived from it so
+     the stage and panel can never drift apart. */
+  :root {
+    --mobile-header-h: 3.5rem;
+    --mobile-foot-h: 4.5rem;
+    --mobile-stage-h: calc(
+      (100dvh - var(--mobile-header-h) - var(--mobile-foot-h) -
+        env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) * 0.4
+    );
+    /* The blob is centered in the stage, so cap it below the stage height.
+       0.9 leaves headroom for the glow, which bleeds past the SVG box.
+       Overrides the viewport-based default declared up in :root. */
+    --blob-size: min(78vw, calc(var(--mobile-stage-h) * 0.9));
+  }
+
+  /* Shift the BlobStage's centered grid into the top 40% band: top edge
+     clears the fixed header. Children stay centered via place-items-center. */
   .mobile-stage {
-    top: calc(env(safe-area-inset-top, 0px) + 3.5rem);
-    height: 48dvh;
+    top: calc(env(safe-area-inset-top, 0px) + var(--mobile-header-h));
+    height: var(--mobile-stage-h);
     bottom: auto;
   }
 
-  /* Fixed bottom-half beat panel. pointer-events none lets touches fall
-     through to the scroller so dragging anywhere advances the blob. */
+  /* Fixed bottom panel filling the remaining 60%. pointer-events none lets
+     touches fall through to the scroller so dragging anywhere advances the
+     blob. */
   .mobile-panel {
     position: fixed;
     left: 0;
     right: 0;
-    top: calc(env(safe-area-inset-top, 0px) + 3.5rem + 48dvh);
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 4.5rem);
+    top: calc(
+      env(safe-area-inset-top, 0px) + var(--mobile-header-h) +
+        var(--mobile-stage-h)
+    );
+    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--mobile-foot-h));
     z-index: 20;
     pointer-events: none;
   }
