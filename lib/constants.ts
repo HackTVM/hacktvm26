@@ -23,9 +23,10 @@ export const COLORS = {
  * MD (768px) is the app's real mobile/desktop switch: it gates the whole
  * experience tree (app/page.tsx) and the two globals.css layout queries.
  *
- * SM (640px) exists only for KeyModal, which is a self-contained overlay that
- * switches to its sheet layout on `sm:`. It is intentionally NOT MD — see the
- * useIsSheet comment in components/KeyModal.tsx.
+ * SM (640px) exists only for KeyModal, a self-contained overlay whose panel
+ * switches from an edge-to-edge sheet to an inset dialog on `sm:`. It is
+ * intentionally NOT MD — see the handleBackdropClick comment in
+ * components/KeyModal.tsx for what still depends on this edge.
  */
 export const SM = 640;
 export const MD = 768;

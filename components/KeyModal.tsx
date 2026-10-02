@@ -14,10 +14,10 @@ import { Mail } from "lucide-react";
  * KeyModal — registration/contact modal opened from the resolved key.
  *
  * Behaviour:
- *  - First open: grows from the key's captured on-screen rect (desktop) or
- *    slides up as a full-screen bottom sheet (mobile). Every later open in
- *    the session (+ reduced motion) is instant.
- *  - Close via close button, Esc, or backdrop tap on desktop.
+ *  - First open: grows from the key's captured on-screen rect, on every
+ *    breakpoint. Every later open in the session (+ reduced motion) is instant.
+ *  - Close via close button, Esc, or backdrop tap where a backdrop exists
+ *    (>= 640px — below that the panel is an edge-to-edge sheet).
  *  - A11y: dialog + aria-labelledby, focus trap, focus moves in on open and
  *    returns to the key on close, scroller scroll-locked while open.
  *  - z-index sits above Header/Footer (z-50) and the blob (z-10) but below
@@ -32,36 +32,6 @@ function getFocusable(el: HTMLElement): HTMLElement[] {
   return Array.from(el.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
     (n) => n.offsetParent !== null || n === document.activeElement,
   );
-}
-
-/**
- * True below Tailwind's `sm:` breakpoint — NOT below the app's `md`/768px one.
- *
- * Deliberately different from hooks/useMediaQuery.ts's `useIsMobile()`. This
- * hook decides only the modal's *entry animation* (grow-from-key vs slide-up
- * bottom sheet), and its 640px boundary has to track the `sm:` classes that
- * actually switch the panel's own layout — `sm:items-center`,
- * `sm:h-[min(86dvh,760px)]`, `sm:w-[min(92vw,1100px)]`, `sm:flex-row` on the
- * countdown, and so on. Raising this to 768 while those stay on `sm:` would
- * animate a centered dialog as if it were a full-screen sheet: it would slide
- * up from `y: "100%"`, and handleBackdropClick would stop dismissing on
- * backdrop tap, across the whole 640-768px range.
- *
- * Named `useIsSheet` (not `useIsMobile`) so the two same-numbered hooks can
- * never be confused for one another.
- */
-function useIsSheet(): boolean {
-  const [isSheet, setIsSheet] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${SM - 1}px)`);
-    const update = () => setIsSheet(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-
-  return isSheet;
 }
 
 /** Target: October 10, 2026, 8:00 AM IST (UTC+5:30) */
@@ -134,7 +104,6 @@ export function KeyModal() {
   } = useApp();
 
   const panelRef = useRef<HTMLDivElement>(null);
-  const isSheet = useIsSheet();
 
   const handleClose = useCallback(() => {
     if (!hasOpenedModal) {
@@ -209,29 +178,30 @@ export function KeyModal() {
     key?.focus();
   }, []);
 
-  /* Backdrop tap dismisses only in dialog mode — a sheet is edge-to-edge, so
-     there is no backdrop outside it to tap. Keep this boundary on the same 640px
-     `sm:` edge as useIsSheet and the panel's layout classes. */
+  /* Backdrop tap dismisses only where the panel is inset enough to leave a
+   backdrop. Below the `sm:` edge the panel is `h-svh w-full` — edge to edge,
+   full height — so there is nothing outside it to tap. That makes this the one
+   place in the file that still tracks Tailwind's `sm:` (640) rather than the
+   app's `md` (768), hence SM. */
   const handleBackdropClick = useCallback(() => {
     if (window.matchMedia(`(min-width: ${SM}px)`).matches) handleClose();
   }, [handleClose]);
 
   const firstOpen = !hasOpenedModal && !isReducedMotion;
-  const growFromKey = firstOpen && !isSheet && modalOrigin !== null;
-  const slideUp = firstOpen && isSheet;
+  /* KeyHitArea is the only thing that opens this modal, and it always captures
+     the key's screen rect immediately before doing so — so modalOrigin is
+     non-null on every platform and this check is a type guard, not a real
+     branch. The scale pivots on the outer `fixed inset-0` wrapper below, which
+     means transformOrigin is expressed in viewport space and needs no
+     per-breakpoint adjustment. */
+  const growFromKey = firstOpen && modalOrigin !== null;
 
-  const initial = growFromKey
-    ? { scale: 0.08, opacity: 0.15 }
-    : slideUp
-      ? { y: "100%" }
-      : false;
-  const animate = { scale: 1, y: "0%", opacity: 1 };
+  const initial = growFromKey ? { scale: 0.08, opacity: 0.15 } : false;
+  const animate = { scale: 1, opacity: 1 };
   const exit = { opacity: 0 };
   const transition = isReducedMotion || !firstOpen
     ? { duration: 0 }
-    : slideUp
-      ? ({ type: "spring" } as const)
-      : { duration: 0.45, ease: "easeOut" as const };
+    : { duration: 0.45, ease: "easeOut" as const };
 
   return (
     <AnimatePresence onExitComplete={handleExitComplete}>
