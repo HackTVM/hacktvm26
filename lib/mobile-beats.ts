@@ -56,7 +56,7 @@ export const BEATS: readonly Beat[] = [
       kind: "hero",
       title: "HackTVM'26: Access Point",
       tagline: "Everyone deserves a way in",
-      body: "Organized by The School of the Good Shepherd's HackTVM, HackTVM'26 is the Second Edition of Trivandrum's first and only inter-school hackathon. It gives student innovators a direct inroad to the tech industry by challenging them to build working technology that solves real-world challenges.",
+      body: "Organized by The School of the Good Shepherd's Hack Club TVM, HackTVM'26 is the Second Edition of Trivandrum's first and only inter-school hackathon. It gives student innovators a direct inroad to the tech industry by challenging them to build working technology that solves real-world challenges.",
     },
   },
 

@@ -17,7 +17,7 @@ export function OverviewSection() {
           </div>
           <FlickerGroup groupId="overview-top">
             <p className="text-gray-mid leading-8 text-lg">
-              Organized by The School of the Good Shepherd's HackTVM, HackTVM'26 is the Second Edition of Trivandrum's first and only inter-school hackathon. It gives student innovators a direct inroad to the tech industry by challenging them to build working technology that solves real-world challenges.
+              Organized by The School of the Good Shepherd's Hack Club TVM, HackTVM'26 is the Second Edition of Trivandrum's first and only inter-school hackathon. It gives student innovators a direct inroad to the tech industry by challenging them to build working technology that solves real-world challenges.
             </p>
           </FlickerGroup>
         </div>

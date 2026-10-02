@@ -841,6 +841,16 @@ body::after {
     0 0 42px rgba(92, 111, 199, 0.18);
 }
 
+/* The modal's close button must keep a circular press glow: its Magnetic
+   wrapper is rounded to 9999px, and a box-shadow is clipped to the shape of
+   the element it sits on, so an unrounded button squares off the glow behind
+   the X. Its own `rounded-full` handles :active; this re-asserts the radius
+   for :focus-visible, which the unlayered `*:focus-visible` rule above forces
+   to 2px and which outranks Tailwind's layered `rounded-full`. */
+.key-modal-close:focus-visible {
+  border-radius: 9999px;
+}
+
 /* ---------- Blob gray drift ----------
    Slow tonal movement for the dark-gray gradient circles inside the blob.
    Pure translate only (compositor-friendly; no filters/masks), driven by

@@ -263,7 +263,12 @@ export function KeyModal() {
                   type="button"
                   onClick={handleClose}
                   aria-label="Close"
-                  className="glow-press flex h-11 w-11 items-center justify-center text-cream transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream"
+                  /* rounded-full so the .glow-press:active box-shadow is clipped
+                     to a circle, matching the Magnetic wrapper's 9999px — an
+                     unrounded button squares off the glow behind the X as the
+                     modal fades out. See .key-modal-close in globals.css for the
+                     :focus-visible half. */
+                  className="key-modal-close glow-press flex h-11 w-11 items-center justify-center rounded-full text-cream transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream"
                 >
                   <svg
                     width="16"
