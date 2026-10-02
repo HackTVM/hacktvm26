@@ -21,7 +21,7 @@ export function ThemeSection() {
           <FlickerGroup className="space-y-6" groupId="theme-left">
             <p className="leading-8 text-lg">If a system or space stands between a person and their independence, it's broken. You're here to build the sledgehammer</p>
             <p className="leading-8 text-lg">
-              <b>Access Point</b> challenges students to design working technology that closes real, everyday gaps in accessibility and inclusivity. Modern design optimizes for an "idealized default user," treating edge cases as an afterthought. We are here to shift that dynamic.</p>
+              <b>Access Point</b> challenges students to design working technology that closes real, everyday gaps in accessibility and inclusivity. Modern design optimizes for an "idealized default user", treating edge cases as an afterthought. We are here to shift that dynamic.</p>
             <p className="leading-8 text-lg">
               Building for accessibility and inclusivity forces you to confront some of the most demanding problems in product design and engineering. Every system must be leaner, faster, and remarkably resilient, with zero room for error.
             </p>

@@ -12,7 +12,6 @@
  * lib/event.ts where they exist there; anything event.ts doesn't carry is
  * hard-coded here (and only here on mobile).
  */
-import { EVENT } from "@/lib/event";
 
 /* ---------- Beat content ---------- */
 export type BeatContent =
@@ -21,11 +20,11 @@ export type BeatContent =
   | { kind: "statement"; title: string; body: string }
   | { kind: "list"; title: string; intro?: string; items: string[] }
   | {
-      kind: "points";
-      title: string;
-      intro?: string;
-      entries: { heading: string; body: string }[];
-    }
+    kind: "points";
+    title: string;
+    intro?: string;
+    entries: { heading: string; body: string }[];
+  }
   | { kind: "note"; title: string; body: string }
   | { kind: "key" };
 
@@ -57,7 +56,7 @@ export const BEATS: readonly Beat[] = [
       kind: "hero",
       title: "HackTVM'26: Access Point",
       tagline: "Everyone deserves a way in",
-      body: "Organized by the School of the Good Shepherd's HackTVM, HackTVM'26 is the Second Edition of Trivandrum's first and only inter-school hackathon. It gives student innovators a direct inroad to the tech industry by challenging them to build working technology that solves real-world challenges.",
+      body: "Organized by The School of the Good Shepherd's HackTVM, HackTVM'26 is the Second Edition of Trivandrum's first and only inter-school hackathon. It gives student innovators a direct inroad to the tech industry by challenging them to build working technology that solves real-world challenges.",
     },
   },
 
@@ -67,25 +66,17 @@ export const BEATS: readonly Beat[] = [
     phase: 1,
     weight: 0.8,
     content: {
-      kind: "statement",
+      kind: "points",
       title: "Access Point",
-      body: "If a system or space stands between a person and their independence, it's broken — you're here to build the sledgehammer. Access Point challenges students to design working technology that closes real, everyday gaps in accessibility and inclusivity: navigating a space, communicating, learning, working, or getting basic public information everyone else takes for granted.",
-    },
-  },
-  {
-    id: "friction",
-    phase: 1,
-    weight: 1,
-    content: {
-      kind: "list",
-      title: "5 Frictions to Tackle",
-      intro: "Expect to tackle friction across 5 primary dimensions:",
-      items: [
-        "Physical & Spatial Friction",
-        "Sensory & Perception Walls",
-        "Cognitive Complexity",
-        "Systemic & Public Barriers",
-        "Health Barriers",
+      entries: [
+        {
+          heading: "The Theme",
+          body: "Access Point challenges students to design working technology that closes real, everyday gaps in accessibility and inclusivity. Modern design optimizes for an 'idealized default user' treating edge cases as an afterthought. We are here to shift that dynamic.",
+        },
+        {
+          heading: "The Challenge",
+          body: "Building for accessibility and inclusivity forces you to confront some of the most demanding problems in product design and engineering. Every system must be leaner, faster, and remarkably resilient, with zero room for error.",
+        },
       ],
     },
   },
@@ -96,10 +87,9 @@ export const BEATS: readonly Beat[] = [
     content: {
       kind: "note",
       title: "The Hackbook",
-      body: `Further specifics on the theme, research context, and reference material will be released on ${EVENT.hackbook.releaseLabel} in the form of The Hackbook — it will provide additional context with recommended tools and APIs, judging criteria, and more.`,
+      body: `Further specifics on the theme, research context, and reference material will be released on Oct 3 2026 in the form of The Hackbook — it will provide additional context with recommended tools and APIs, judging criteria, and more.`,
     },
   },
-
   /* ---- Phase 2 · Event Format ---- */
   {
     id: "format",
@@ -108,37 +98,24 @@ export const BEATS: readonly Beat[] = [
     content: {
       kind: "points",
       title: "Event Format",
-      intro:
-        "Most hackathons end when the timer hits zero. We give you the funding and the runway to actually finish what you started.",
       entries: [
         {
-          heading: `${EVENT.phaseI.label} — The Hackathon`,
+          heading: `The Hackathon - 10 Oct 2026`,
           body: "A 7-hour sprint where teams conceptualize, design, and build a solution to any one of the problem statements presented to them.",
         },
-      ],
-    },
-  },
-  {
-    id: "development",
-    phase: 2,
-    weight: 1.3,
-    content: {
-      kind: "points",
-      title: "Development Phase",
-      entries: [
         {
-          heading: "The Grant",
+          heading: "Development Phase",
           body: "Top 5 teams from Phase I receive a ₹10,000 development grant and 3 weeks to refine their prototypes and work on their final pitch.",
         },
         {
-          heading: `${EVENT.phaseII.label} — Demo Day`,
-          body: "The top 5 teams present their finished products to a panel of industry judges. The top 3 teams are offered internship opportunities with partnership companies along with cash prizes.",
+          heading: "Demo Day - 31 Oct 2026",
+          body: "The top 5 teams present their finished products to a panel of industry judges. The top 3 teams are offered internship opportunities with partnership companies along with cash prizes worth ₹30,000.",
         },
       ],
     },
   },
   {
-    id: "timeline",
+    id: "Itinerary",
     phase: 2,
     weight: 1,
     content: {
@@ -146,41 +123,33 @@ export const BEATS: readonly Beat[] = [
       facts: [
         {
           label: "Registrations",
-          value: "TBD", // TODO(dates): registration was extended — new dates TBD
+          value: "7:00 to 8:00",
         },
         {
-          label: "Orientation on Screening",
-          value: EVENT.keyDates.orientation,
+          label: "8:00",
+          value: "Hackathon Starts",
         },
         {
-          label: "Screening",
-          value: "TBD", // TODO(dates): screening dates may have shifted — confirm before publishing
+          label: "8:30 to 10:30",
+          value: "Component Window",
         },
         {
-          label: "Hackbook Release",
-          value: EVENT.hackbook.releaseLabel,
+          label: "15:00",
+          value: "Hackathon Ends",
         },
         {
-          label: EVENT.phaseI.label,
-          value: EVENT.phaseI.dateLabel,
+          label: "15:15 to 16:15",
+          value: "Lunch Break",
         },
         {
-          label: EVENT.phaseII.label,
-          value: EVENT.phaseII.dateLabel,
+          label: "15:15 to 18:45",
+          value: "Judging",
+        },
+        {
+          label: "19:00 to 19:45",
+          value: "Valedictory",
         },
       ],
-    },
-  },
-
-  /* ---- Phase 3 · The Program ---- */
-  {
-    id: "opportunity",
-    phase: 3,
-    weight: 0.6,
-    content: {
-      kind: "statement",
-      title: "The Opportunity",
-      body: "₹10,000 development grant for finalist teams — plus tech internships and cash prizes for the top 3 winners.",
     },
   },
   {
@@ -197,7 +166,7 @@ export const BEATS: readonly Beat[] = [
         },
         {
           heading: "Top 3 Winners",
-          body: "Cash prizes of ₹25,000, ₹15,000 and ₹10,000 — and project-based internships with partner tech companies.",
+          body: "Cash prizes of ₹15,000, ₹10,000 and ₹5,000 — and project-based internships with partner tech companies.",
         },
         {
           heading: "All Participants",
@@ -226,23 +195,6 @@ export const BEATS: readonly Beat[] = [
           heading: "Technical Execution",
           body: "Working code or hardware that you can defend in technical Q&A.",
         },
-      ],
-    },
-  },
-  {
-    id: "checklist",
-    phase: 3,
-    weight: 1,
-    content: {
-      kind: "list",
-      title: "Registration Checklist",
-      intro: "Before you hit submit, make sure your team has all of this sorted out:",
-      items: [
-        "Students in Grades 8 to 12",
-        "2 to 4 students per team",
-        "Strictly 1 team per school",
-        "1 teacher or faculty member to accompany the team as a mentor",
-        "A signed and stamped Letter of Authorization from your school Principal",
       ],
     },
   },

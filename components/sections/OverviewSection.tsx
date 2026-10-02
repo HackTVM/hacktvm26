@@ -23,7 +23,7 @@ export function OverviewSection() {
         </div>
 
         {/* Bottom-right slot */}
-        <div className="absolute right-20 bottom-0 sm:right-8 md:right-[6%] md:bottom-[16%] max-w-md ">
+        <div className="absolute right-10 bottom-20 sm:right-8 md:right-[6%] md:bottom-[16%] max-w-md ">
           <h2 className="py-1 font-mono uppercase tracking-wide text-xl font-bold mb-2 text-glow">
             Overview
           </h2>
