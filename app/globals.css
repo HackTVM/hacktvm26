@@ -128,16 +128,26 @@
 
   /* Fluid type scale. Tailwind's stock --text-* values are rem-only, so every
      size stayed byte-identical between a 768px tablet and a 2560px display —
-     proportionally huge in the narrow band where the blob is smallest. Each
-     clamp below ramps between a 768px and a 1600px viewport and then holds.
-     Only the size is overridden; the paired --text-*--line-height defaults
-     (which set generous leading) are left untouched on purpose. */
+     proportionally huge in the narrow band where the blob is smallest.
+
+     --text-lg and --text-3xl are anchored to hit their authored Tailwind
+     value at exactly 1440px (18px and 30px), which is the width the design is
+     tuned for; they were previously a full step oversize there, rendering at
+     Tailwind's text-xl / text-4xl steps. Both ramp across 768 -> 1440 and
+     their ceiling is whatever that line reaches at 1920px, so a single linear
+     clamp fixes the mid-range without a second breakpoint. The remaining six
+     ramp across 768 -> 1600 as before — they were never more than half a step
+     oversize, so they were left alone.
+
+     Only the size is overridden; the paired --text-*--line-height defaults are
+     left untouched on purpose. Those are unitless ratios (text-lg -> 1.556,
+     text-3xl -> 1.2), so leading is independent of these clamps. */
   --text-base: clamp(0.9375rem, 0.8221rem + 0.2404vw, 1.0625rem);
   --text-sm: clamp(0.8125rem, 0.6971rem + 0.2404vw, 0.9375rem);
-  --text-lg: clamp(1rem, 0.7115rem + 0.601vw, 1.3125rem);
+  --text-lg: clamp(1rem, 0.8571rem + 0.2976vw, 1.2143rem);
   --text-xl: clamp(1.0625rem, 0.774rem + 0.601vw, 1.375rem);
   --text-2xl: clamp(1.125rem, 0.8173rem + 0.7212vw, 1.5rem);
-  --text-3xl: clamp(1.5rem, 0.8077rem + 1.4423vw, 2.25rem);
+  --text-3xl: clamp(1.5rem, 1.0714rem + 0.8929vw, 2.1429rem);
   --text-6xl: clamp(3rem, 1.8463rem + 2.4038vw, 4.25rem);
   --text-7xl: clamp(3.5rem, 2.1156rem + 2.8846vw, 5rem);
 }
