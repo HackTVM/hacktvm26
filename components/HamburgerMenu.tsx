@@ -123,7 +123,7 @@ export function HamburgerMenu() {
       >
         {/* Background box - scales from top-right corner */}
         <motion.div
-          className="flex items-center justify-center bg-black/25"
+          className="flex items-center justify-center bg-black/25 max-md:bg-black/60"
           style={{
             width: closedSize,
             height: closedSize,
