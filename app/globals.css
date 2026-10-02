@@ -182,8 +182,11 @@ body {
 
 /* Full-screen transparent scroller of invisible spacers. This is the ONLY
      scroll container on mobile (no nested scroll, no horizontal scroll).
-     scroll-snap-type makes each spacer a snap point so one gesture settles
-     on exactly one beat (one flick = one beat). */
+     `proximity` rather than `mandatory`: each spacer is still a snap point,
+     but a fling is no longer forced to the nearest one, so a flick travels as
+     far as its momentum carries and can rest between beats. The blob tracks
+     the scroll continuously; MobileExperience defers the beat commit to
+     scroll-idle so the panel crossfades once onto whatever beat it lands on. */
   .mobile-scroller {
     position: absolute;
     inset: 0;
@@ -192,7 +195,7 @@ body {
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior-y: none;
-    scroll-snap-type: y mandatory;
+    scroll-snap-type: y proximity;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE/Edge */
   }
@@ -202,20 +205,19 @@ body {
 
   /* Each spacer is a snap point. stop:always fought every programmatic
      scroll (dot taps, restore) — it forced an overshoot to the NEXT port;
-     mandatory + plain start aligns to the nearest port, which is what real
-     finger flicks (with momentum) land on and what smooth scrolls end at. */
+     plain start aligns to the nearest port, which is what real finger flicks
+     (with momentum) land on and what smooth scrolls end at. */
   [data-mobile-spacer] {
     scroll-snap-align: start;
   }
 }
 
-/* ---------- A/B Isolation: ?nosnap ----------
-   Dev-only flag (set from the URL in MobileExperience). Relaxes the mobile
-   per-beat snap from `mandatory` to `proximity` so the delayed-down-flick
-   report can be isolated: if the delay persists under proximity, mandatory
-   snap-holding is not the cause. */
-body.nosnap .mobile-scroller {
-  scroll-snap-type: y proximity;
+/* ---------- A/B Isolation: ?snap ----------
+   Dev-only flag (set from the URL in MobileExperience). The mobile per-beat
+   snap is `proximity` by default; this pins it back to `mandatory` so the
+   looser travel can be compared against hard one-beat stops on device. */
+body.snap .mobile-scroller {
+  scroll-snap-type: y mandatory;
 }
 
 /* ---------- Snap Sections ---------- */
