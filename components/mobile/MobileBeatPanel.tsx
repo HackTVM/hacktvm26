@@ -59,7 +59,9 @@ function renderContent(content: BeatContent) {
     case "statement":
       return (
         <div>
-          <h2 className="font-mono text-lg font-bold text-cream">{content.title}</h2>
+          <h2 className="font-mono text-lg font-bold text-cream text-glow">
+            {content.title}
+          </h2>
           <p className="mt-2 text-[15px] leading-[1.5] text-gray-light">
             {content.body}
           </p>
@@ -69,7 +71,9 @@ function renderContent(content: BeatContent) {
     case "list":
       return (
         <div>
-          <h2 className="font-mono text-lg font-bold text-cream">{content.title}</h2>
+          <h2 className="font-mono text-lg font-bold text-cream text-glow">
+            {content.title}
+          </h2>
           {content.intro && (
             <p className="mt-1.5 text-[15px] leading-[1.5] text-gray-mid">
               {content.intro}
@@ -92,7 +96,9 @@ function renderContent(content: BeatContent) {
     case "points":
       return (
         <div>
-          <h2 className="font-mono text-lg font-bold text-cream">{content.title}</h2>
+          <h2 className="font-mono text-lg font-bold text-cream text-glow">
+            {content.title}
+          </h2>
           {content.intro && (
             <p className="mt-1.5 text-[15px] leading-[1.5] text-gray-mid">
               {content.intro}
@@ -101,7 +107,7 @@ function renderContent(content: BeatContent) {
           <div className="mt-3 flex flex-col gap-3.5">
             {content.entries.map((entry) => (
               <div key={entry.heading}>
-                <h3 className="font-mono text-[15px] font-bold text-cream">
+                <h3 className="font-mono text-[15px] font-bold text-cream text-glow">
                   {entry.heading}
                 </h3>
                 <p className="mt-0.5 text-[15px] leading-[1.5] text-gray-light">
@@ -116,7 +122,9 @@ function renderContent(content: BeatContent) {
     case "note":
       return (
         <div>
-          <h2 className="font-mono text-lg font-bold text-cream">{content.title}</h2>
+          <h2 className="font-mono text-lg font-bold text-cream text-glow">
+            {content.title}
+          </h2>
           <p className="mt-1.5 text-[15px] leading-[1.5] text-gray-light">
             {content.body}
           </p>
