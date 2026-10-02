@@ -305,14 +305,21 @@ export function KeyModal() {
                           Download Brochure
                         </a>
                       </Magnetic>
-                      <button
-                        type="button"
-                        disabled
-                        className="glow-press block w-full bg-white/10 py-3 text-center font-mono text-sm font-bold text-gray-mid cursor-not-allowed sm:w-fit sm:px-10"
-                        aria-label="Download Hackbook (coming Oct 3)"
+                      <Magnetic
+                        className="block w-full sm:w-fit"
+                        pull={6}
+                        glow={18}
+                        radius={90}
+                        borderRadius="0"
                       >
-                        Download Hackbook
-                      </button>
+                        <a
+                          href="/hackbook.pdf"
+                          download
+                          className="glow-press block w-full bg-cream py-3 text-center font-mono text-sm font-bold text-black active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream sm:px-10"
+                        >
+                          Download Hackbook
+                        </a>
+                      </Magnetic>
                     </div>
                   </section>
 
