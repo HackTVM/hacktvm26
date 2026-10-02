@@ -18,6 +18,15 @@ import { FlickerGroup } from "@/components/FlickerGroup";
 
 const warnedBeats = new Set<string>();
 
+/* Beat swap timing. `AnimatePresence mode="wait"` runs these in SERIES — the
+   outgoing article must finish exiting before the incoming one mounts — so the
+   first visible sign of a beat change lands at the EXIT duration, not at 0.
+   Kept short, and opacity-only: the panel is fixed and does not move with the
+   scroll, so this swap is the only feedback connecting a scroll to a new beat,
+   and the old y-translate read as lag rather than as a transition. */
+const BEAT_EXIT_DURATION = 0.06;
+const BEAT_ENTER_DURATION = 0.14;
+
 interface NavLink {
   label: string;
   href: string;
@@ -226,21 +235,17 @@ export function MobileBeatPanel({ beat, isKeyResolved, isKeyBeat }: MobileBeatPa
                  top-aligned. */
               isKeyBeat ? "flex flex-col justify-center" : ""
             }`}
-            initial={
-              isReducedMotion
-                ? { opacity: 0 }
-                : { opacity: 0, y: 18 }
-            }
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={
               isReducedMotion
                 ? { opacity: 0, transition: { duration: 0 } }
-                : { opacity: 0, y: -18 }
+                : { opacity: 0, transition: { duration: BEAT_EXIT_DURATION } }
             }
             transition={
               isReducedMotion
                 ? { duration: 0 }
-                : { duration: 0.22, ease: "easeOut" }
+                : { duration: BEAT_ENTER_DURATION, ease: "easeOut" }
             }
           >
             {renderContent(beat.content)}
