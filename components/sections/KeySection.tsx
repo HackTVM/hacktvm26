@@ -36,8 +36,8 @@ export function KeySection({ progress }: KeySectionProps) {
   }
 
   const links: readonly NavLink[] = [
-    { label: "Builds", href: "#", disabled: true },
     { label: "Moments", href: "#", disabled: true },
+    { label: "Builds", href: "#", disabled: true },
   ];
 
   return (

@@ -46,7 +46,7 @@ export function TimelineSection() {
             </h1>
           </div>
           <FlickerGroup groupId="timeline-left-bottom">
-            <ul className="list-disc pl-6 leading-7 space-y-2">
+            <ul className="list-disc pl-6 leading-8 space-y-2">
               <li className="text-lg"><b>Concept & Vision:</b> Idea originality and a realistic roadmap to scale it</li>
               <li className="text-lg"><b>Theme Alignment:</b> Real-world impact solved from the user's perspective, not assumptions</li>
               <li className="text-lg"><b>Technical Execution:</b> Working code or hardware that you can defend in technical Q&A</li>

@@ -10,7 +10,15 @@ export function OverviewSection() {
         {/* Top-left slot */}
         <div className="absolute left-5 top-20 sm:left-8 md:left-[var(--rail-inset-x)] md:top-[var(--rail-inset-top)] max-w-[var(--rail-max-w)] text-left">
           <div className="mb-4">
-            <h1 className="text-3xl font-bold font-mono text-glow">
+            {/* whitespace-nowrap is load-bearing: --text-3xl scales with the
+                viewport but --rail-max-w stops at 28rem, so this 24-char mono
+                line needs ~432px at 1440 and ~494px at 1920 against a 448px
+                rail — it wraps from roughly 1560px up (and at 768px, where the
+                rail is only 42vw). The heading extends past the rail box instead;
+                nothing clips it, and the blob's silhouette is nowhere near it at
+                this height (top-[14%]). All five other text-3xl headings are 12-16
+                chars and fit inside the rail unaided. */}
+            <h1 className="text-3xl font-bold font-mono text-glow whitespace-nowrap">
               HackTVM'26: Access Point
             </h1>
             <p className="py-1 font-mono uppercase tracking-wide text-base">Everyone deserves a way in</p>
