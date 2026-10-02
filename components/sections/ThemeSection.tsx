@@ -12,7 +12,7 @@ export function ThemeSection() {
     <SectionWrapper id="theme" title="Theme">
       <div className="h-full w-full">
         {/* Full left rail — vertically centred */}
-        <div className="absolute space-y-4 left-5 top-1/2 -translate-y-1/2 sm:left-8 md:left-[6%] max-w-md text-left">
+        <div className="absolute space-y-4 left-5 top-1/2 -translate-y-1/2 sm:left-8 md:left-[var(--rail-inset-x)] max-w-[var(--rail-max-w)] text-left">
           <div className="pb-2">
             <h1 className="text-3xl font-bold font-mono text-glow">
               Access Point
@@ -29,7 +29,7 @@ export function ThemeSection() {
         </div>
 
         {/* Bottom-right slot */}
-        <div className="absolute right-5 bottom-20 sm:right-8 md:right-[6%] md:bottom-[16%] max-w-md text-right">
+        <div className="absolute right-5 bottom-20 sm:right-8 md:right-[var(--rail-inset-x)] md:bottom-[var(--rail-inset-bottom)] max-w-[var(--rail-max-w)] text-right">
           <h2 className="py-1 font-mono uppercase tracking-wide text-xl font-bold mb-2 text-glow">
             The Hackbook
           </h2>

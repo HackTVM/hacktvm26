@@ -11,7 +11,7 @@ export function TimelineSection() {
   return (
     <SectionWrapper id="timeline" title="Timeline & Registration">
       <div className="h-full w-full">
-        <div className="absolute left-5 top-20 sm:left-8 md:left-[6%] md:top-[14%] max-w-md text-left md:text-left flex flex-col justify-between">
+        <div className="absolute left-5 top-20 sm:left-8 md:left-[var(--rail-inset-x)] md:top-[var(--rail-inset-top)] max-w-[var(--rail-max-w)] text-left flex flex-col justify-between">
           <div>
             <div className="pb-6">
               <h1 className="text-3xl font-bold font-mono text-glow">
@@ -35,7 +35,11 @@ export function TimelineSection() {
           </div>
         </div>
 
-        <div className="absolute right-5 bottom-30 sm:right-8 md:right-[6%] max-w-md">
+        {/* This rail keeps its fixed bottom-30 rather than a percentage inset —
+            unlike its siblings it was never on the rail-inset scale, so moving
+            it to --rail-inset-bottom would shift it on wide screens. It still
+            picks up the width guard. */}
+        <div className="absolute right-5 bottom-30 sm:right-8 md:right-[var(--rail-inset-x)] max-w-[var(--rail-max-w)]">
           <div className="pb-4">
             <h1 className="text-3xl font-bold font-mono text-glow">
               How We Judge

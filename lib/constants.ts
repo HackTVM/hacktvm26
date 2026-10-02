@@ -16,6 +16,20 @@ export const COLORS = {
   grayLight: "#cccccc",
 } as const;
 
+/* ---------- Breakpoints (px) ----------
+ * Mirror Tailwind's default width scale. These must track the `sm:`/`md:`
+ * variants used in markup — CSS can't read this file, so keep the two in sync.
+ *
+ * MD (768px) is the app's real mobile/desktop switch: it gates the whole
+ * experience tree (app/page.tsx) and the two globals.css layout queries.
+ *
+ * SM (640px) exists only for KeyModal, which is a self-contained overlay that
+ * switches to its sheet layout on `sm:`. It is intentionally NOT MD — see the
+ * useIsSheet comment in components/KeyModal.tsx.
+ */
+export const SM = 640;
+export const MD = 768;
+
 /* ---------- Section IDs (in scroll order) ---------- */
 export const SECTION_IDS = [
   "overview",

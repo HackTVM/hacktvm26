@@ -6,12 +6,15 @@
  * swap in layout is masked by the full-screen LoadingScreen, so neither the
  * page nor the user sees the "desktop first" frame.
  *
- * Mobile is defined as strictly below the `md` breakpoint (768px): desktop
- * takes over at >= 768px, exactly matching the desktop import of --blob-size.
+ * Mobile is defined as strictly below the `md` breakpoint (MD = 768px in
+ * lib/constants): desktop takes over at >= 768px, exactly matching the desktop
+ * branch of the --blob-size / rail-inset media queries in globals.css. Note
+ * KeyModal uses its own SM = 640px sheet breakpoint — that one is deliberate.
  */
 "use client";
 
 import { useEffect, useState } from "react";
+import { MD } from "@/lib/constants";
 
 export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(false);
@@ -27,7 +30,7 @@ export function useMediaQuery(query: string): boolean {
   return matches;
 }
 
-/** True on any viewport narrower than Tailwind's md breakpoint (768px). */
+/** True on any viewport narrower than the app's `md` breakpoint (MD = 768px). */
 export function useIsMobile(): boolean {
-  return useMediaQuery("(max-width: 767px)");
+  return useMediaQuery(`(max-width: ${MD - 1}px)`);
 }

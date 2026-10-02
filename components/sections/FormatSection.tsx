@@ -12,7 +12,7 @@ export function FormatSection() {
     <SectionWrapper id="format" title="Event Format">
       <div className="h-full w-full">
         {/* Left rail — full, vertically centred */}
-        <div className="absolute left-5 top-1/2 -translate-y-1/2 sm:left-8 md:left-[6%] max-w-md text-left">
+        <div className="absolute left-5 top-1/2 -translate-y-1/2 sm:left-8 md:left-[var(--rail-inset-x)] max-w-[var(--rail-max-w)] text-left">
           <div>
             <h1 className="text-3xl font-bold font-mono text-glow">
               Event Format
@@ -40,7 +40,7 @@ export function FormatSection() {
         </div>
 
         {/* Right rail — full, vertically centred */}
-        <div className="absolute right-5 top-1/2 -translate-y-1/2 sm:right-8 md:right-[6%] w-full max-w-md font-mono uppercase tracking-wide space-y-4">
+        <div className="absolute right-5 top-1/2 -translate-y-1/2 sm:right-8 md:right-[var(--rail-inset-x)] w-full max-w-[var(--rail-max-w)] font-mono uppercase tracking-wide space-y-4">
           <h2 className="text-2xl font-bold font-mono text-glow">
             Itinerary
           </h2>

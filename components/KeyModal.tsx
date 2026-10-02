@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useApp } from "@/context/AppContext";
 import { EVENT } from "@/lib/event";
 import { KEY_HIT_AREA_ID } from "@/components/KeyHitArea";
+import { SM } from "@/lib/constants";
 import { Magnetic } from "@/components/Magnetic";
 import { Mail } from "lucide-react";
 
@@ -33,19 +34,34 @@ function getFocusable(el: HTMLElement): HTMLElement[] {
   );
 }
 
-/** True below the first breakpoint (matches Tailwind's `sm:`). */
-function useIsMobile(): boolean {
-  const [isMobile, setIsMobile] = useState(false);
+/**
+ * True below Tailwind's `sm:` breakpoint — NOT below the app's `md`/768px one.
+ *
+ * Deliberately different from hooks/useMediaQuery.ts's `useIsMobile()`. This
+ * hook decides only the modal's *entry animation* (grow-from-key vs slide-up
+ * bottom sheet), and its 640px boundary has to track the `sm:` classes that
+ * actually switch the panel's own layout — `sm:items-center`,
+ * `sm:h-[min(86dvh,760px)]`, `sm:w-[min(92vw,1100px)]`, `sm:flex-row` on the
+ * countdown, and so on. Raising this to 768 while those stay on `sm:` would
+ * animate a centered dialog as if it were a full-screen sheet: it would slide
+ * up from `y: "100%"`, and handleBackdropClick would stop dismissing on
+ * backdrop tap, across the whole 640-768px range.
+ *
+ * Named `useIsSheet` (not `useIsMobile`) so the two same-numbered hooks can
+ * never be confused for one another.
+ */
+function useIsSheet(): boolean {
+  const [isSheet, setIsSheet] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 639px)");
-    const update = () => setIsMobile(mq.matches);
+    const mq = window.matchMedia(`(max-width: ${SM - 1}px)`);
+    const update = () => setIsSheet(mq.matches);
     update();
     mq.addEventListener("change", update);
     return () => mq.removeEventListener("change", update);
   }, []);
 
-  return isMobile;
+  return isSheet;
 }
 
 /** Target: October 10, 2026, 8:00 AM IST (UTC+5:30) */
@@ -118,7 +134,7 @@ export function KeyModal() {
   } = useApp();
 
   const panelRef = useRef<HTMLDivElement>(null);
-  const isSheet = useIsMobile();
+  const isSheet = useIsSheet();
 
   const handleClose = useCallback(() => {
     if (!hasOpenedModal) {
@@ -193,8 +209,11 @@ export function KeyModal() {
     key?.focus();
   }, []);
 
+  /* Backdrop tap dismisses only in dialog mode — a sheet is edge-to-edge, so
+     there is no backdrop outside it to tap. Keep this boundary on the same 640px
+     `sm:` edge as useIsSheet and the panel's layout classes. */
   const handleBackdropClick = useCallback(() => {
-    if (window.matchMedia("(min-width: 640px)").matches) handleClose();
+    if (window.matchMedia(`(min-width: ${SM}px)`).matches) handleClose();
   }, [handleClose]);
 
   const firstOpen = !hasOpenedModal && !isReducedMotion;

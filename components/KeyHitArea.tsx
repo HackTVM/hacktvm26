@@ -22,9 +22,9 @@ export const KEY_HIT_AREA_ID = "key-hit-area";
 
 /**
  * Keycap bounds as fractions of the blob SVG's box (the SVG's viewBox is 200×200,
- * and the rendered box is --blob-size: 380/520/680px). Derived from BlobMorph's
- * own silhouette pipeline so the hit area always covers exactly where the key
- * renders, at every breakpoint:
+ * and the rendered box is --blob-size, which is fluid per breakpoint). Derived
+ * from BlobMorph's own silhouette pipeline so the hit area always covers exactly
+ * where the key renders, at every breakpoint:
  *
  *   silhouette.svg rasterized at 400 → ink centroid (179.6, 197.9),
  *   max radius 159.0 → scale = (90 × 0.42) / 159.0 = 0.2378.

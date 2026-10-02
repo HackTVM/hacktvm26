@@ -8,7 +8,7 @@ export function OverviewSection() {
     <SectionWrapper id="overview" headingLevel={1} title="Overview">
       <div className="h-full w-full">
         {/* Top-left slot */}
-        <div className="absolute left-5 top-20 sm:left-8 md:left-[6%] md:top-[14%] max-w-md text-left md:text-left">
+        <div className="absolute left-5 top-20 sm:left-8 md:left-[var(--rail-inset-x)] md:top-[var(--rail-inset-top)] max-w-[var(--rail-max-w)] text-left">
           <div className="mb-4">
             <h1 className="text-3xl font-bold font-mono text-glow">
               HackTVM'26: Access Point
@@ -23,7 +23,7 @@ export function OverviewSection() {
         </div>
 
         {/* Bottom-right slot */}
-        <div className="absolute right-10 bottom-20 sm:right-8 md:right-[6%] md:bottom-[16%] max-w-md ">
+        <div className="absolute right-10 bottom-20 sm:right-8 md:right-[var(--rail-inset-x)] md:bottom-[var(--rail-inset-bottom)] max-w-[var(--rail-max-w)]">
           <h2 className="py-1 font-mono uppercase tracking-wide text-xl font-bold mb-2 text-glow">
             Overview
           </h2>
