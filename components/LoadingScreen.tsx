@@ -103,7 +103,7 @@ export function LoadingScreen() {
             type="button"
             onClick={handleActivate}
             className={[
-              "text-glow-strong underline md:underline-offset-4 decoration-cream/60",
+              "text-glow-strong underline decoration-cream/60",
               "cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-6",
               "focus-visible:outline-cream",
               showHint ? "animate-pulse-hint" : "",
