@@ -269,6 +269,21 @@ body {
    SVG feTurbulence as a CSS data URI — GPU-cached texture, no network request.
    Applied as a pseudo-element to avoid breaking position:fixed children.
    Oversized inset (-20%) provides headroom for the jitter animation.
+
+   PERFORMANCE: mix-blend-mode prevents compositor isolation, so this layer has
+   to be re-blended against its backdrop every time the backdrop changes — and
+   the blob repaints continuously. At inset -20% that is ~1.96x the viewport
+   area, per frame. Two properties keep it cheap without altering the look:
+
+     will-change: transform  — promotes the element to its own compositor
+       layer so the `translate` jitter animation is composited rather than
+       repainted.
+     contain: paint          — clips the effect to this element's box so the
+       blend only considers that region.
+
+   The jitter is also slowed 0.7s -> 2.4s. At steps(6) it re-blends ~8.5x/sec
+   on its own; 6 steps over 2.4s is ~2.5x/sec, which is below the threshold
+   where the grain reads as movement rather than texture.
    -------------------------------------------------------------------------- */
 body::after {
   content: "";
@@ -278,10 +293,13 @@ body::after {
   z-index: 9999;
   opacity: var(--grain-opacity);
   mix-blend-mode: overlay;
+  will-change: transform;
+  contain: paint;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 220px 220px;
-  animation: grain-jitter 0.7s steps(6) infinite;
+  animation: grain-jitter 2.4s steps(6) infinite;
 }
+
 
 @keyframes grain-jitter {
   0%  { translate: 0 0; }
