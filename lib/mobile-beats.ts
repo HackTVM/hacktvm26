@@ -101,7 +101,7 @@ export const BEATS: readonly Beat[] = [
       entries: [
         {
           heading: `The Hackathon - 10 Oct 2026`,
-          body: "A 7-hour sprint where teams conceptualize, design, and build a solution to any one of the problem statements presented to them.",
+          body: "A 7-hour sprint where teams design, and build a solution to any one of the problem statements.",
         },
         {
           heading: "Development Phase",
@@ -166,7 +166,7 @@ export const BEATS: readonly Beat[] = [
         },
         {
           heading: "Top 3 Winners",
-          body: "Cash prizes of ₹15,000, ₹10,000 and ₹5,000 — and project-based internships with partner tech companies.",
+          body: "Cash prizes of ₹15,000, ₹10,000 and ₹5,000 — and project-based internships with our partnered tech companies: Hex20 Space, NeST Digital Pvt. Ltd. & Quinoid Business Solutions Pvt. Ltd.",
         },
         {
           heading: "All Participants",
