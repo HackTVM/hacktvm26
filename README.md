@@ -4,7 +4,6 @@
 
 The official site for **HackTVM '26**, the 2nd Edition of Trivandrum's first ever inter-school hackathon, run by The School of the Good Shepherd's [Hack Club TVM](https://github.com/hackTVM).
 
----
 
 ## About
 
@@ -42,9 +41,9 @@ Open [http://localhost:3000](http://localhost:3000) to view it locally.
 
 ## Contact
 
-- 📧 [hackclubtvm@gmail.com](mailto:hackclubtvm@gmail.com)
-- 📷 [Instagram](https://www.instagram.com/hacktvm/)
-- 🐙 [GitHub](https://github.com/hackTVM)
+- 📧 [Mail: hackclubtvm@gmail.com](mailto:hackclubtvm@gmail.com)
+- 📷 [Instagram: @hacktvm](https://www.instagram.com/hacktvm/)
+- 🐙 [Github: HackTVM](https://github.com/hackTVM)
 
 ---
 
