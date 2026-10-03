@@ -8,8 +8,7 @@
  */
 "use client";
 
-import Image from "next/image";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useApp } from "@/context/AppContext";
 import { DURATIONS } from "@/lib/constants";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
@@ -18,7 +17,7 @@ export function Header() {
   const { isLoading, isReducedMotion } = useApp();
 
   return (
-    <motion.header
+    <m.header
       className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between pointer-events-none pt-4 px-4"
       aria-hidden={isLoading}
       initial={{ opacity: 0 }}
@@ -33,18 +32,19 @@ export function Header() {
 
       {/* Centered wordmark */}
       <div className="flex-1 flex justify-center pointer-events-auto">
-        <Image
+        <img
           src="/logo.png"
           alt="HackTVM'26"
           width={240}
           height={40}
-          priority
+          fetchPriority="high"
+          decoding="async"
           className="select-none py-4 h-auto w-auto max-h-12"
         />
       </div>
 
       {/* Hamburger menu - top right */}
       <HamburgerMenu />
-    </motion.header>
+    </m.header>
   );
 }

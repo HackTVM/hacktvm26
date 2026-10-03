@@ -24,7 +24,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useApp } from "@/context/AppContext";
 
 /*
@@ -65,7 +65,7 @@ export function LoadingScreen() {
   if (!isLoading) return null;
 
   return (
-    <motion.div
+    <m.div
       className="fixed inset-0 z-[10000] bg-black flex items-center justify-center"
       initial={{ opacity: 1 }}
       animate={{ opacity: isExiting ? 0 : 1 }}
@@ -130,6 +130,6 @@ export function LoadingScreen() {
           </p>
         )}
       </div>
-    </motion.div>
+    </m.div>
   );
 }

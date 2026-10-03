@@ -265,13 +265,6 @@ body {
   position: relative;
 }
 
-/* Sections below the key section can be auto-height */
-.snap-section-auto {
-  min-height: 100vh;
-  scroll-snap-align: start;
-  position: relative;
-}
-
 /* ---------- Film Grain Overlay ----------
    SVG feTurbulence as a CSS data URI — GPU-cached texture, no network request.
    Applied as a pseudo-element to avoid breaking position:fixed children.

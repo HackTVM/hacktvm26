@@ -23,7 +23,7 @@
 "use client";
 
 import {
-  motion,
+  m,
   useMotionTemplate,
   useMotionValue,
   useSpring,
@@ -120,7 +120,7 @@ export function Magnetic({
   /* boxShadow template stays active so only the glow ramps; visual change is
      purely transform + box-shadow — never layout. */
   return (
-    <motion.div
+    <m.div
       ref={ref}
       className={className}
       style={{
@@ -131,6 +131,6 @@ export function Magnetic({
       data-magnetic
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { useApp } from "@/context/AppContext";
 import { EVENT } from "@/lib/event";
 import { KEY_HIT_AREA_ID } from "@/components/KeyHitArea";
@@ -207,7 +207,7 @@ export function KeyModal() {
     <AnimatePresence onExitComplete={handleExitComplete}>
       {isModalOpen && (
         <>
-          <motion.div
+          <m.div
             key="key-modal-backdrop"
             className="fixed inset-0 z-[8999] modal-backdrop"
             initial={{ opacity: 0 }}
@@ -217,7 +217,7 @@ export function KeyModal() {
             onClick={handleBackdropClick}
           />
 
-          <motion.div
+          <m.div
             key="key-modal-panel"
             initial={initial}
             animate={animate}
@@ -387,7 +387,7 @@ export function KeyModal() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>

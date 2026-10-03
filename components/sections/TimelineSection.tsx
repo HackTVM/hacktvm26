@@ -4,7 +4,6 @@
  */
 "use client";
 
-import Link from "next/link"
 import { SectionWrapper } from "@/components/SectionWrapper";
 import { FlickerGroup } from "@/components/FlickerGroup";
 
@@ -26,7 +25,7 @@ export function TimelineSection() {
               </div>
               <div>
                 <h2 className="pb-1 font-mono uppercase tracking-wide font-bold text-lg">Top 3 Winners</h2>
-                <p className="text-lg">Cash prizes of &#8377;15,000, &#8377;10,000 and &#8377;5,000 and project-based internships with our partnered tech companies: <Link className="text-blue-300" href="https://hex20.space/">Hex20 Space</Link>, <Link className="text-blue-300" href="https://nestdigital.com/">NeST Digital Pvt. Ltd.</Link> & <Link className="text-blue-300" href="https://www.quinoid.com/">Quinoid Business Solutions Pvt. Ltd.</Link></p>
+                <p className="text-lg">Cash prizes of &#8377;15,000, &#8377;10,000 and &#8377;5,000 and project-based internships with our partnered tech companies: <a className="text-blue-300" href="https://hex20.space/" target="_blank" rel="noreferrer">Hex20 Space</a>, <a className="text-blue-300" href="https://nestdigital.com/" target="_blank" rel="noreferrer">NeST Digital Pvt. Ltd.</a> &amp; <a className="text-blue-300" href="https://www.quinoid.com/" target="_blank" rel="noreferrer">Quinoid Business Solutions Pvt. Ltd.</a></p>
               </div>
               <div>
                 <h2 className="pb-1 font-mono uppercase tracking-wide font-bold text-lg">All Participants</h2>

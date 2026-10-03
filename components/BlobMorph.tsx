@@ -169,8 +169,8 @@ const MESH_SETTLE_END = KEY_RIGID_PROGRESS; // fully calm once key is rigid
    key's <image> is the only position that is both behind the key and visible
    during its fade-in.
 
-   Colours are the palette's own phase 1 and phase 3 stops (see lib/theme.ts),
-   so the backlight belongs to the same arc as everything else. Placed on the
+   Colours are the palette's own phase 1 and phase 3 stops, so the backlight
+   belongs to the same arc as everything else. Placed on the
    top-right / bottom-left diagonal, matching the direction that arc travels.
    Not clipped to the blob, so it survives the silhouette's fade-out and stays
    behind the key in its final, settled state. */

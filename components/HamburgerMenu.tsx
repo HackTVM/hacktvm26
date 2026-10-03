@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { useApp } from "@/context/AppContext";
 import { X, Menu } from "lucide-react";
 
@@ -122,7 +122,7 @@ export function HamburgerMenu() {
         className="relative flex items-center justify-center pointer-events-auto shrink-0"
       >
         {/* Background box - scales from top-right corner */}
-        <motion.div
+        <m.div
           className="flex items-center justify-center bg-black/25 max-md:bg-black/60"
           style={{
             width: closedSize,
@@ -143,7 +143,7 @@ export function HamburgerMenu() {
 
         {/* Menu links - sibling to background, NOT scaled */}
         {isOpen && (
-          <motion.div
+          <m.div
             id="hamburger-menu"
             ref={menuRef}
             role="menu"
@@ -159,7 +159,7 @@ export function HamburgerMenu() {
           >
             <nav className="flex flex-col gap-3 w-full max-w-xs" aria-label="Navigation">
               {NAV_LINKS.map((link, index) => (
-                <motion.a
+                <m.a
                   key={link.label}
                   href={link.href}
                   role="menuitem"
@@ -191,16 +191,16 @@ export function HamburgerMenu() {
                       coming soon
                     </span>
                   )}
-                </motion.a>
+                </m.a>
               ))}
             </nav>
-          </motion.div>
+          </m.div>
         )}
 
         {/* Hamburger / X icon - always on top, inside button */}
         <AnimatePresence mode="wait">
           {isOpen ? (
-            <motion.div
+            <m.div
               key="close"
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 hover:cursor-pointer"
               initial={{ opacity: 0 }}
@@ -209,9 +209,9 @@ export function HamburgerMenu() {
               transition={{ duration: 0.2 }}
             >
               <X width={24} height={24} strokeWidth={2} stroke={WHITE} />
-            </motion.div>
+            </m.div>
           ) : (
-            <motion.div
+            <m.div
               key="menu"
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 hover:cursor-pointer"
               initial={{ opacity: 0 }}
@@ -220,7 +220,7 @@ export function HamburgerMenu() {
               transition={{ duration: 0.2 }}
             >
               <Menu width={24} height={24} strokeWidth={2} stroke={WHITE} />
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>

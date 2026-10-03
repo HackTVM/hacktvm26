@@ -17,7 +17,7 @@
  */
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useApp } from "@/context/AppContext";
 import { SECTION_IDS, DURATIONS } from "@/lib/constants";
 import type { SectionId } from "@/lib/constants";
@@ -52,7 +52,7 @@ export function SectionWrapper({
       aria-hidden={!isActive}
       className="snap-section relative scroll-mt-0"
     >
-      <motion.div
+      <m.div
         className="absolute inset-0"
         initial={{ opacity: 0 }}
         animate={{ opacity: isLoading ? 0 : isActive ? 1 : 0 }}
@@ -63,7 +63,7 @@ export function SectionWrapper({
 
         {/* Each section composes its own layout around the blob */}
         {children}
-      </motion.div>
+      </m.div>
     </section>
   );
 }

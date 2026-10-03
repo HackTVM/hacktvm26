@@ -209,9 +209,3 @@ export const BEATS: readonly Beat[] = [
     },
   },
 ];
-
-/** Number of phases on mobile — derived fresh from the beat list so a change
-    to the beat structure can never leave a stale count behind. The blob
-    boundary step (1 / (maxPhase - minPhase)) is likewise derived at runtime in
-    lib/mobile-progress.ts. */
-export const PHASE_COUNT = Math.max(...BEATS.map((b) => b.phase)) + 1;

@@ -11,7 +11,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { useApp } from "@/context/AppContext";
 import type { Beat, BeatContent } from "@/lib/mobile-beats";
 import { FlickerGroup } from "@/components/FlickerGroup";
@@ -246,7 +246,7 @@ export function MobileBeatPanel({ beat, isKeyResolved, isKeyBeat }: MobileBeatPa
     <div ref={boxRef} className="mobile-panel">
       <div className="h-full">
         <AnimatePresence mode="wait" initial={false}>
-          <motion.article
+          <m.article
             key={beat.id}
             data-beat={beat.id}
             className={`h-full overflow-hidden px-5 pt-1 pb-1 ${
@@ -300,7 +300,7 @@ export function MobileBeatPanel({ beat, isKeyResolved, isKeyBeat }: MobileBeatPa
                 </ul>
               </nav>
             )}
-          </motion.article>
+          </m.article>
         </AnimatePresence>
       </div>
     </div>

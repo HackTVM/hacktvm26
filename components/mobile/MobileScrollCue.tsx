@@ -5,7 +5,7 @@
  */
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { useApp } from "@/context/AppContext";
 
 interface MobileScrollCueProps {
@@ -18,7 +18,7 @@ export function MobileScrollCue({ visible }: MobileScrollCueProps) {
   return (
     <AnimatePresence>
       {visible && (
-        <motion.div
+        <m.div
           className="pointer-events-none fixed left-0 right-0 z-20 flex flex-col items-center"
           style={{
             /* Sits in the gap between the beat panel's bottom edge (4.5rem)
@@ -34,7 +34,7 @@ export function MobileScrollCue({ visible }: MobileScrollCueProps) {
           transition={{ duration: isReducedMotion ? 0 : 0.4 }}
           aria-hidden="true"
         >
-          <motion.svg
+          <m.svg
             width="16"
             height="16"
             viewBox="0 0 16 16"
@@ -52,8 +52,8 @@ export function MobileScrollCue({ visible }: MobileScrollCueProps) {
             }
           >
             <path d="M8 3v10M4 9l4 4 4-4" />
-          </motion.svg>
-        </motion.div>
+          </m.svg>
+        </m.div>
       )}
     </AnimatePresence>
   );

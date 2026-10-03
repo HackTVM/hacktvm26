@@ -30,7 +30,7 @@
 "use client";
 
 import { useCallback, useRef } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useApp } from "@/context/AppContext";
 import { useIsMobile } from "@/hooks/useMediaQuery";
 import { SECTION_IDS, SECTION_LABELS, DURATIONS } from "@/lib/constants";
@@ -248,7 +248,7 @@ export function Footer() {
   );
 
   return (
-    <motion.footer
+    <m.footer
       className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center pointer-events-none"
       aria-hidden={isLoading}
       initial={{ opacity: 0 }}
@@ -263,6 +263,6 @@ export function Footer() {
       ) : (
         <SectionDots scrollTo={scrollSection} />
       )}
-    </motion.footer>
+    </m.footer>
   );
 }

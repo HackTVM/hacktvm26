@@ -1,20 +1,7 @@
 /**
  * HackTVM'26 — Access Point
- * Central constants: colors, section configuration, dates, animation durations.
+ * Central constants: section configuration and animation durations.
  */
-
-/* ---------- Color Tokens ---------- */
-export const COLORS = {
-  lightblue: "#81b7d3",
-  blue: "#4b7cd3",
-  violet: "#603db6",
-  purple: "#340a61",
-  black: "#000000",
-  white: "#ffffff",
-  grayDim: "#444444",
-  grayMid: "#888888",
-  grayLight: "#cccccc",
-} as const;
 
 /* ---------- Breakpoints (px) ----------
  * Mirror Tailwind's default width scale. These must track the `sm:`/`md:`
@@ -49,21 +36,6 @@ export const SECTION_LABELS: Record<SectionId, string> = {
   format: "Event Format",
   timeline: "Timeline & Registration",
   key: "The Key",
-};
-
-/* ---------- Deadline ---------- */
-export const DEADLINE = new Date("2026-10-10T00:00:00");
-
-/* ---------- Morph Progress ----------
- * Maps each section index to a flubber interpolation t value (0 = blob, 1 = keycap).
- * The blob morphs progressively as the user scrolls through sections.
- */
-export const MORPH_PROGRESS: Record<number, number> = {
-  0: 0,    // Overview — fully shapeless
-  1: 0.2,  // Theme — early morph
-  2: 0.45, // Format — mid morph
-  3: 0.75, // Timeline — nearly resolved
-  4: 1,    // Key — fully formed keycap
 };
 
 /* ---------- Animation Durations (seconds) ---------- */

@@ -26,6 +26,7 @@ import {
 } from "react";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useIsTouch } from "@/hooks/useIsTouch";
+import { LazyMotion, domMin } from "framer-motion";
 
 /* ---------- Shape ---------- */
 interface AppState {
@@ -57,7 +58,7 @@ interface AppState {
 }
 
 /* ---------- Modal origin (in viewport px) ---------- */
-export interface ModalOrigin {
+interface ModalOrigin {
   x: number;
   y: number;
   width: number;
@@ -112,7 +113,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ],
   );
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  /* domMin is `animations` only — the `animate`/`initial`/`transition` and
+     `exit` features this app actually uses. It deliberately omits drag, pan
+     and layout projection (the `domMax` extras) plus the hover/tap/focus/
+     inView gesture features, none of which appear anywhere in the tree.
+     `strict` makes any stray `motion.*` inside throw instead of silently
+     re-pulling the full bundle. Must live in a client component: the
+     features object can't cross the server->client serialization boundary,
+     which is why this is here rather than in app/layout.tsx. */
+  return (
+    <AppContext.Provider value={value}>
+      <LazyMotion features={domMin} strict>
+        {children}
+      </LazyMotion>
+    </AppContext.Provider>
+  );
 }
 
 /* ---------- Hook ---------- */
