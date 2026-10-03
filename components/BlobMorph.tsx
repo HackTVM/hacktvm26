@@ -682,14 +682,18 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
       const cursor = cursorRef.current;
 
       const targetProgress = Math.min(1, Math.max(0, progressRef.current));
-      smoothedProgressRef.current +=
-        (targetProgress - smoothedProgressRef.current) * PROGRESS_LERP;
+      if (isReducedMotion) {
+        smoothedProgressRef.current = targetProgress;
+      } else {
+        smoothedProgressRef.current +=
+          (targetProgress - smoothedProgressRef.current) * PROGRESS_LERP;
+      }
       const currentProgress = smoothedProgressRef.current;
 
-      const fluidityFactor = computeFluidity(currentProgress);
+      const fluidityFactor = isReducedMotion ? 0 : computeFluidity(currentProgress);
       const shapeBlend = computeShapeBlend(currentProgress);
-      const idleAmplitude = IDLE_AMPLITUDE_MAX * fluidityFactor;
-      const stretchStrength = STRETCH_STRENGTH_MAX * fluidityFactor;
+      const idleAmplitude = isReducedMotion ? 0 : IDLE_AMPLITUDE_MAX * fluidityFactor;
+      const stretchStrength = isReducedMotion ? 0 : STRETCH_STRENGTH_MAX * fluidityFactor;
 
       let svgCenterX = window.innerWidth / 2;
       let svgCenterY = window.innerHeight / 2;
@@ -707,7 +711,7 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
       let influenceFactor = 0;
       let cursorAngle = 0;
 
-      if (cursor.active && fluidityFactor > 0.01) {
+      if (!isReducedMotion && cursor.active && fluidityFactor > 0.01) {
         const dx = cursor.x - svgCenterX;
         const dy = cursor.y - svgCenterY;
         const dist = Math.hypot(dx, dy);
@@ -741,9 +745,14 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
       }
 
       for (let i = 0; i < NUM_POINTS; i++) {
-        const force = (rawTargets[i] - rOffsets[i]) * STIFFNESS;
-        rVelocities[i] = (rVelocities[i] + force) * DAMPING;
-        rOffsets[i] += rVelocities[i];
+        if (isReducedMotion) {
+          rOffsets[i] = 0;
+          rVelocities[i] = 0;
+        } else {
+          const force = (rawTargets[i] - rOffsets[i]) * STIFFNESS;
+          rVelocities[i] = (rVelocities[i] + force) * DAMPING;
+          rOffsets[i] += rVelocities[i];
+        }
       }
 
       const smoothedOffsets = new Float32Array(NUM_POINTS);
@@ -767,7 +776,7 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
         const baseMorphRadius =
           (1 - shapeBlend) * BASE_RADIUS + shapeBlend * targetKeyRadius;
 
-        const n = shapeNoise.noise2D(cosA * 0.9, sinA * 0.9 + time);
+        const n = isReducedMotion ? 0 : shapeNoise.noise2D(cosA * 0.9, sinA * 0.9 + time);
         const idleRadius = baseMorphRadius + n * idleAmplitude;
 
         const finalRadius = idleRadius + smoothedOffsets[i];
@@ -807,14 +816,19 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
       // Halo orbit. Light directional lerp (no spring) — colours shift toward
       // cursor angle with subtle smoothing. Violet stays opposite blue.
       // No cursor -> both ease back to resting opposed positions.
-      const blueTarget =
-        haloTargetRef.current !== null ? haloTargetRef.current : HALO_BLUE_REST_ANGLE;
-      const wrapPi = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
-      // Blue -> lerp toward cursor target.
-      let bd = wrapPi(blueTarget - haloBlueAngRef.current);
-      haloBlueAngRef.current += bd * HALO_LERP;
-      // Violet -> always diametrically opposite blue.
-      haloVioletAngRef.current = wrapPi(haloBlueAngRef.current + Math.PI);
+      if (isReducedMotion) {
+        haloBlueAngRef.current = HALO_BLUE_REST_ANGLE;
+        haloVioletAngRef.current = HALO_BLUE_REST_ANGLE + Math.PI;
+      } else {
+        const blueTarget =
+          haloTargetRef.current !== null ? haloTargetRef.current : HALO_BLUE_REST_ANGLE;
+        const wrapPi = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
+        // Blue -> lerp toward cursor target.
+        let bd = wrapPi(blueTarget - haloBlueAngRef.current);
+        haloBlueAngRef.current += bd * HALO_LERP;
+        // Violet -> always diametrically opposite blue.
+        haloVioletAngRef.current = wrapPi(haloBlueAngRef.current + Math.PI);
+      }
 
       if (haloBlueRef.current) {
         // translate by the ORBIT OFFSET only — the <use> shapes already sit
@@ -840,7 +854,7 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
       window.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseleave", handleMouseLeave);
     };
-  }, []);
+  }, [isReducedMotion]);
 
   /* Phase-linked intensities: lerp the *_ALIVE -> *_CALM constants with the
      mesh settle, clamped to SVG's 0..1 opacity range. React render values
