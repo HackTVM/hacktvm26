@@ -78,15 +78,27 @@ export function Magnetic({
 
   const boxShadow = useMotionTemplate`0 0 ${glowV}px ${glowHalf}px rgba(${color}, 0.4)`;
 
+  /* Cached box. Reading this per pointermove event was a forced reflow: three
+     instances are alive at once while the key modal is open, and each was
+     flushing layout on every pointer event anywhere on the page (the listener
+     was on `window`, so it ran even with the pointer nowhere near the element).
+     Both problems are fixed below — the listener is scoped to the element, and
+     the box is only re-read when it can actually have changed. */
+  const rectRef = useRef<DOMRect | null>(null);
+
+  const measure = useCallback(() => {
+    const el = ref.current;
+    if (el) rectRef.current = el.getBoundingClientRect();
+  }, []);
+
   const track = useCallback(
     (e: PointerEvent) => {
       /* Only a real mouse (never touch/stylus drags). */
       if (e.pointerType !== "mouse") return;
-      const el = ref.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      const cx = r.left + r.width / 2;
-      const cy = r.top + r.height / 2;
+      const rect = rectRef.current;
+      if (!rect) return;
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
       const dx = e.clientX - cx;
       const dy = e.clientY - cy;
       const dist = Math.hypot(dx, dy);
@@ -112,10 +124,27 @@ export function Magnetic({
   );
 
   useEffect(() => {
-    if (isTouchDevice) return; // no cursor on touch
-    window.addEventListener("pointermove", track);
-    return () => window.removeEventListener("pointermove", track);
-  }, [isTouchDevice, track]);
+    const el = ref.current;
+    if (isTouchDevice || !el) return; // no cursor on touch
+
+    /* Scoped to the element rather than `window`, so this only runs while the
+       pointer is actually over (or within the radius of) the target. */
+    measure();
+    el.addEventListener("pointermove", track);
+    /* The box only moves with layout, so these are the only events that can
+       invalidate it. */
+    const invalidate = () => measure();
+    window.addEventListener("scroll", invalidate, { passive: true });
+    window.addEventListener("resize", invalidate);
+    const ro = new ResizeObserver(invalidate);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("pointermove", track);
+      window.removeEventListener("scroll", invalidate);
+      window.removeEventListener("resize", invalidate);
+      ro.disconnect();
+    };
+  }, [isTouchDevice, track, measure]);
 
   /* boxShadow template stays active so only the glow ramps; visual change is
      purely transform + box-shadow — never layout. */

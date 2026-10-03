@@ -5,16 +5,16 @@
  */
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { SectionWrapper } from "@/components/SectionWrapper";
-import { KEY_RIGID_PROGRESS } from "@/components/BlobMorph";
 
 interface KeySectionProps {
-  progress: number;
+  /** Whether the key has fully resolved, latched for the session. Boolean
+      rather than raw progress so scroll never enters the React render path. */
+  isKeyResolved: boolean;
 }
 
-export function KeySection({ progress }: KeySectionProps) {
-  const isResolved = progress >= KEY_RIGID_PROGRESS;
+function KeySectionImpl({ isKeyResolved: isResolved }: KeySectionProps) {
   const [showLinks, setShowLinks] = useState(false);
 
   useEffect(() => {
@@ -77,3 +77,10 @@ export function KeySection({ progress }: KeySectionProps) {
     </SectionWrapper>
   );
 }
+
+/* memo()'d so that state changes above these sections (AppContext, the sticky
+   key-resolved flag) don't re-reconcile their markup. The sections take no
+   props or only a boolean, so a shallow compare is enough — no custom
+   comparator, and no risk of stale closures since none of them close over
+   changing values. */
+export const KeySection = memo(KeySectionImpl);

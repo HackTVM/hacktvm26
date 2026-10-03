@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
+import type { MotionValue } from "framer-motion";
 import { useApp } from "@/context/AppContext";
 
 class SimplexNoise {
@@ -386,6 +387,17 @@ function computeBlobVisibility(p: number): number {
 
 const PROGRESS_LERP = 0.06;
 
+/* At-rest tolerance for parking the tick (see the park site in the physics
+   effect). Below this, a lerp's next step would round away to nothing, so the
+   following frame would write byte-identical values to every target. */
+const REST_EPSILON = 0.001;
+/* Physics rest test: offsets and velocities are in viewBox units, where the
+   blob's own radius is BASE_RADIUS (~46), so this is well under a pixel. */
+const PHYSICS_REST_EPSILON = 0.002;
+/* How long the page must be hidden before the tick stops entirely. Short
+   grace period so tab-switching doesn't leave a half-parked loop. */
+const HIDDEN_PAUSE_MS = 1000;
+
 interface KeyImagePlacement {
   href: string;
   x: number;
@@ -395,10 +407,18 @@ interface KeyImagePlacement {
 }
 
 interface BlobMorphProps {
+  /** Discrete progress (mobile). Latched internally exactly as before. */
   progress?: number;
+  /**
+   * Continuous progress source (desktop scroll). Preferred over `progress`:
+   * subscribing to the MotionValue keeps scroll updates entirely out of the
+   * React render path, so scrolling no longer re-renders the experience tree.
+   * Ignored when `progress` is supplied.
+   */
+  progressSource?: MotionValue<number>;
 }
 
-export function BlobMorph({ progress = 0 }: BlobMorphProps) {
+function BlobMorphImpl({ progress = 0, progressSource }: BlobMorphProps) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   const corePathRef = useRef<SVGPathElement>(null);
@@ -434,13 +454,61 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
   const keyImageRef = useRef<KeyImagePlacement | null>(null);
   const [keyImageReady, setKeyImageReady] = useState(false);
 
+  /* Raw progress, written from OUTSIDE React (a MotionValue subscription on
+     desktop, the discrete mobile prop on mobile) so that scrolling never
+     re-renders this component or anything above it. */
   const progressRef = useRef(progress);
+  /* Key-resolution lock-in, mirroring useLatchedProgress: once the key is fully
+     resolved, effective progress is 1 for the rest of the session, so scrolling
+     back up never replays the shapeless/resolving blob states. Held as a ref
+     (not state) because the physics loop owns it — flipping it must not
+     trigger a render. */
+  const latchedRef = useRef(false);
+
+  /* Set by the pointer/mouse handlers and the progress subscription so the
+     parked loop knows it must run another frame. */
+  const kickRef = useRef(0);
+
+  /* Bridges owned by the physics effect, driven by component-level effects.
+     A parked loop cannot be restarted from inside its own effect (hooks may
+     only be called at the top level), hence these refs. */
+  const restartRef = useRef<(() => void) | null>(null);
+  const stopRef = useRef<(() => void) | null>(null);
+
+  /* When the page was hidden, per the visibilitychange effect below. */
+  const hiddenAtRef = useRef(0);
+
   useEffect(() => {
-    progressRef.current = progress;
-  }, [progress]);
+    if (!progressSource) {
+      progressRef.current = progress;
+      return;
+    }
+    const sync = () => {
+      progressRef.current = progressSource.get();
+      /* Wake a parked loop. Unreachable in practice (parking requires the latch,
+         which pins progress to 1), but it keeps the invariant explicit rather
+         than relying on that argument holding. */
+      kickRef.current++;
+      restartRef.current?.();
+    };
+    sync();
+    /* Sync only, never setState: the tick reads progressRef every frame, so a
+       React render would be pure overhead here. */
+    return progressSource.on("change", sync);
+  }, [progress, progressSource]);
 
   const smoothedProgressRef = useRef(0);
   const lastBlobOpacityRef = useRef<string | null>(null);
+
+  /* Cached blob box. The tick and the pointer handlers both need it, and
+     reading it per frame was the forced reflow: the tick writes `d` plus five
+     style/attribute mutations every frame, so the NEXT frame's
+     getBoundingClientRect() had to synchronously flush style recalc + layout
+     for that whole mutated SVG subtree, mid-frame, before the browser's own
+     paint. BlobStage is `fixed inset-0 grid place-items-center`, so this box
+     cannot move during scroll — it changes only on resize, orientation change,
+     or a breakpoint retarget. Refreshed by the geometry effect below. */
+  const blobRectRef = useRef<DOMRect | null>(null);
 
   /* Grain pattern tile size in SVG user units, so each texel is ~1 DEVICE
      pixel at every breakpoint/DPR. The SVG viewBox is 200 units wide mapped
@@ -453,16 +521,21 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
 
   const { isReducedMotion } = useApp();
 
-  /* Grain tile sizing effect — ResizeObserver on the svg element + a
-     devicePixelRatio matchMedia listener, both outside the tick. No per-frame
-     reads/writes: only runs when the blob box or DPR changes. */
+  /* Blob geometry cache — ResizeObserver on the svg element, a window resize /
+     orientation listener, and a devicePixelRatio matchMedia listener. Owns the
+     ONE getBoundingClientRect() that the tick and the pointer handlers used to
+     perform per frame; both now read blobRectRef. Also drives grain tile
+     sizing. Nothing here runs per frame. */
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
     const update = () => {
       const rect = svg.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+      blobRectRef.current = rect;
+      kickRef.current++;
       const dpr = window.devicePixelRatio || 1;
-      if (rect.width > 0 && dpr > 0) {
+      if (dpr > 0) {
         // Exact texel = device-pixel mapping, then SNAP the pattern tile to a
         // whole number of device pixels: round(dpr * blobPx/200 * tileUnits)
         // gives the device px per tile, which we convert back to user units.
@@ -478,34 +551,53 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
     update();
     const ro = new ResizeObserver(update);
     ro.observe(svg);
+    /* Orientation/breakpoint changes that don't alter the svg's own box (e.g.
+       the mobile stage being retargeted into a different band) still need a
+       refresh, so listen on the window too. Cheap: fires only on real resizes. */
+    window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
     const dprMedia = window.matchMedia(
       `(resolution: ${window.devicePixelRatio}dppx)`
     );
     dprMedia.addEventListener?.("change", update);
     return () => {
       ro.disconnect();
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
       dprMedia.removeEventListener?.("change", update);
     };
   }, []);
 
   /* Cursor-shifted specular highlight (LIGHT_FOLLOWS_CURSOR). One SMALL
      mousemove listener in its own effect — NOT in the tick. It writes a
-     single CSS transform translate() on the specular <g> per event; a CSS
-     transition (LIGHT_CURSOR_TRANSITION) eases it toward the cursor. No
-     per-frame JS. Skipped for reduced motion and coarse (touch) pointers,
-     which have no hovering cursor to follow. */
+     single CSS transform translate() on the specular <g>, at most once per
+     frame; a CSS transition (LIGHT_CURSOR_TRANSITION) eases it toward the
+     cursor, so intermediate writes are redundant. Skipped for reduced motion
+     and coarse (touch) pointers, which have no hovering cursor to follow. */
   useEffect(() => {
     const svg = svgRef.current;
     const el = specularShiftRef.current;
     if (!svg || !el || !LIGHT_FOLLOWS_CURSOR) return;
     if (isReducedMotion) return;
     if (!window.matchMedia("(pointer: fine)").matches) return;
-    const apply = (e: MouseEvent) => {
-      const rect = svg.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return;
+
+    /* rAF-throttled: pointermove fires far faster than the display refreshes
+       (60-125Hz typically, up to 1000Hz on high-polling-rate mice), and this
+       handler used to read layout on every single event. The rect now comes
+       from blobRectRef (see the geometry effect), so the remaining per-event
+       work is a style write — which a 350ms CSS transition is already easing,
+       so writing every event was redundant regardless. Latest coordinates are
+       stored and applied at most once per frame. */
+    let rafId = 0;
+    let px = 0;
+    let py = 0;
+    const flush = () => {
+      rafId = 0;
+      const rect = blobRectRef.current;
+      if (!rect || rect.width <= 0 || rect.height <= 0) return;
       // Normalized cursor offset from the blob center, -1..1 on each axis.
-      const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+      const nx = ((px - rect.left) / rect.width) * 2 - 1;
+      const ny = ((py - rect.top) / rect.height) * 2 - 1;
       // Shift up to LIGHT_CURSOR_SHIFT viewBox units, converted to CSS px
       // (1 user unit = rect.width / 200 css px).
       const maxCss = (LIGHT_CURSOR_SHIFT * rect.width) / 200;
@@ -513,19 +605,29 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
       const ty = ny * maxCss;
       el.style.transform = `translate(${tx.toFixed(2)}px ${ty.toFixed(2)}px)`;
 
-      // Halo orbit target, from the same rect and the same mouse event. The raw
+      // Halo orbit target, from the same rect and the same coordinates. The raw
       // cursor angle (radians) around the key centre; held still inside a
       // deadzone around the key so the light doesn't spin under the pointer.
-      const vx = ((e.clientX - rect.left) / rect.width) * 200;
-      const vy = ((e.clientY - rect.top) / rect.height) * 200;
+      const vx = ((px - rect.left) / rect.width) * 200;
+      const vy = ((py - rect.top) / rect.height) * 200;
       const dx = vx - KEY_HALO_CX;
       const dy = vy - KEY_HALO_CY;
       if (Math.hypot(dx, dy) > HALO_DEADZONE_UNITS) {
         haloTargetRef.current = Math.atan2(dy, dx);
       }
+      /* Orbit target moved — if the tick was parked, it has to run again. */
+      kickRef.current++;
     };
-    window.addEventListener("mousemove", apply);
-    return () => window.removeEventListener("mousemove", apply);
+    const onMove = (e: MouseEvent) => {
+      px = e.clientX;
+      py = e.clientY;
+      if (rafId === 0) rafId = requestAnimationFrame(flush);
+    };
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      if (rafId !== 0) cancelAnimationFrame(rafId);
+    };
   }, [isReducedMotion]);
 
   const cursorRef = useRef<{ x: number; y: number; active: boolean }>({
@@ -660,28 +762,56 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
 
     const rOffsets = new Float32Array(NUM_POINTS);
     const rVelocities = new Float32Array(NUM_POINTS);
+    /* Scratch buffers, allocated ONCE. These were previously re-allocated every
+       frame (two Float32Array(NUM_POINTS) plus a NUM_POINTS-long array of point
+       objects), which churned the nursery ~60x/second for nothing. */
+    const rawTargets = new Float32Array(NUM_POINTS);
+    const smoothedOffsets = new Float32Array(NUM_POINTS);
+    const points: { x: number; y: number }[] = [];
+    for (let i = 0; i < NUM_POINTS; i++) points.push({ x: 0, y: 0 });
 
     const handleMouseMove = (e: MouseEvent) => {
-      cursorRef.current = { x: e.clientX, y: e.clientY, active: true };
+      /* Mutate in place rather than reallocating the record per event. */
+      const c = cursorRef.current;
+      c.x = e.clientX;
+      c.y = e.clientY;
+      if (!c.active) {
+        c.active = true;
+      }
+      /* Always kick: a parked loop has to run again to pick up the new cursor
+         position. Cheap — the counter is only compared, never iterated. */
+      kickRef.current++;
+      restartRef.current?.();
     };
 
     const handleMouseLeave = () => {
       cursorRef.current.active = false;
       haloTargetRef.current = null;
+      /* Halo orbit target reset — if the tick was parked, run it again so the
+         orbit eases back to its resting angle. */
+      kickRef.current++;
+      restartRef.current?.();
     };
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     document.addEventListener("mouseleave", handleMouseLeave);
 
-    let rafId: number;
+    let rafId: number | null = null;
     const startTime = performance.now();
 
     const tick = () => {
+      rafId = null;
       const now = performance.now() - startTime;
       const time = now * IDLE_SPEED;
       const cursor = cursorRef.current;
 
-      const targetProgress = Math.min(1, Math.max(0, progressRef.current));
+      const rawProgress = Math.min(1, Math.max(0, progressRef.current));
+      /* Key-resolution lock-in (was useLatchedProgress on the value fed in).
+         Full resolution is only reached on the key section, so latching here is
+         unambiguous. */
+      if (rawProgress >= KEY_RIGID_PROGRESS) latchedRef.current = true;
+      const targetProgress = latchedRef.current ? 1 : rawProgress;
+
       if (isReducedMotion) {
         smoothedProgressRef.current = targetProgress;
       } else {
@@ -695,16 +825,15 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
       const idleAmplitude = isReducedMotion ? 0 : IDLE_AMPLITUDE_MAX * fluidityFactor;
       const stretchStrength = isReducedMotion ? 0 : STRETCH_STRENGTH_MAX * fluidityFactor;
 
-      let svgCenterX = window.innerWidth / 2;
-      let svgCenterY = window.innerHeight / 2;
-
-      if (svgRef.current) {
-        const rect = svgRef.current.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0) {
-          svgCenterX = rect.left + rect.width / 2;
-          svgCenterY = rect.top + rect.height / 2;
-        }
-      }
+      /* Blob centre, from the cached box — no layout read in the tick. Falls
+         back to the viewport centre until the geometry effect has measured. */
+      const rect = blobRectRef.current;
+      const svgCenterX = rect
+        ? rect.left + rect.width / 2
+        : window.innerWidth / 2;
+      const svgCenterY = rect
+        ? rect.top + rect.height / 2
+        : window.innerHeight / 2;
 
       const maxRange = Math.max(window.innerWidth, window.innerHeight) * 0.75;
 
@@ -722,7 +851,6 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
         }
       }
 
-      const rawTargets = new Float32Array(NUM_POINTS);
       let totalTarget = 0;
 
       if (influenceFactor > 0) {
@@ -742,8 +870,14 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
         for (let i = 0; i < NUM_POINTS; i++) {
           rawTargets[i] -= meanTarget * 0.95;
         }
+      } else {
+        /* rawTargets is reused across frames, so it must be cleared here —
+           the integrator below treats it as the spring's rest position, and
+           stale values would hold the blob deformed after the cursor left. */
+        rawTargets.fill(0);
       }
 
+      let physicsAtRest = true;
       for (let i = 0; i < NUM_POINTS; i++) {
         if (isReducedMotion) {
           rOffsets[i] = 0;
@@ -752,10 +886,15 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
           const force = (rawTargets[i] - rOffsets[i]) * STIFFNESS;
           rVelocities[i] = (rVelocities[i] + force) * DAMPING;
           rOffsets[i] += rVelocities[i];
+          if (
+            Math.abs(rOffsets[i]) > PHYSICS_REST_EPSILON ||
+            Math.abs(rVelocities[i]) > PHYSICS_REST_EPSILON
+          ) {
+            physicsAtRest = false;
+          }
         }
       }
 
-      const smoothedOffsets = new Float32Array(NUM_POINTS);
       for (let i = 0; i < NUM_POINTS; i++) {
         const prev = rOffsets[(i - 1 + NUM_POINTS) % NUM_POINTS];
         const curr = rOffsets[i];
@@ -764,7 +903,6 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
         smoothedOffsets[i] = curr * 0.6 + (prev + next) * 0.2;
       }
 
-      const points: { x: number; y: number }[] = [];
       const targetRadii = targetRadiiRef.current;
 
       for (let i = 0; i < NUM_POINTS; i++) {
@@ -783,7 +921,8 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
         const px = CANVAS_CENTER + finalRadius * cosA;
         const py = CANVAS_CENTER + finalRadius * sinA;
 
-        points.push({ x: px, y: py });
+        points[i].x = px;
+        points[i].y = py;
       }
 
       const dString = buildSmoothPath(points);
@@ -816,15 +955,15 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
       // Halo orbit. Light directional lerp (no spring) — colours shift toward
       // cursor angle with subtle smoothing. Violet stays opposite blue.
       // No cursor -> both ease back to resting opposed positions.
+      const blueTarget =
+        haloTargetRef.current !== null ? haloTargetRef.current : HALO_BLUE_REST_ANGLE;
+      const wrapPi = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
       if (isReducedMotion) {
         haloBlueAngRef.current = HALO_BLUE_REST_ANGLE;
         haloVioletAngRef.current = HALO_BLUE_REST_ANGLE + Math.PI;
       } else {
-        const blueTarget =
-          haloTargetRef.current !== null ? haloTargetRef.current : HALO_BLUE_REST_ANGLE;
-        const wrapPi = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
         // Blue -> lerp toward cursor target.
-        let bd = wrapPi(blueTarget - haloBlueAngRef.current);
+        const bd = wrapPi(blueTarget - haloBlueAngRef.current);
         haloBlueAngRef.current += bd * HALO_LERP;
         // Violet -> always diametrically opposite blue.
         haloVioletAngRef.current = wrapPi(haloBlueAngRef.current + Math.PI);
@@ -844,17 +983,101 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
         haloVioletRef.current.setAttribute("transform", `translate(${vx.toFixed(2)} ${vy.toFixed(2)})`);
       }
 
+      /* ---------- Park when nothing can change next frame ----------
+         The tick used to run unconditionally, forever, even after the key had
+         resolved (which latches for the whole session): it kept rebuilding a
+         32-point path string and writing `d` + five style/attribute mutations
+         60x/second on a fully transparent blob. That not only cost the write
+         itself, it kept style dirty, which is what forced every subsequent
+         layout read — including Framer's own useScroll — to flush a full
+         recalc.
+
+         The halo has NO idle breathing animation (its orbit is a lerp toward a
+         fixed target and its opacity is progress-driven), so once all four
+         conditions below hold, the next frame would write byte-identical
+         values to every target. If a breathing halo is ever added, this
+         predicate needs a time-based term.
+
+         Restart triggers: pointer entering the window, the cursor leaving the
+         key deadzone, a progress change, or a geometry/DPR change — each bumps
+         kickRef, which restart() consumes. */
+      const haloSettled =
+        isReducedMotion ||
+        Math.abs(wrapPi(blueTarget - haloBlueAngRef.current)) < REST_EPSILON;
+      const progressSettled =
+        Math.abs(targetProgress - smoothedProgressRef.current) < REST_EPSILON;
+      const cursorQuiet = !cursor.active || influenceFactor <= 0;
+      const kicked = kickRef.current !== 0;
+      if (kicked) kickRef.current = 0;
+
+      if (blobFade <= 0 && haloSettled && progressSettled && physicsAtRest && cursorQuiet && !kicked) {
+        return; // rafId stays null: parked until a restart trigger
+      }
+
       rafId = requestAnimationFrame(tick);
     };
 
-    rafId = requestAnimationFrame(tick);
+    const restart = () => {
+      if (rafId === null) rafId = requestAnimationFrame(tick);
+    };
+    const stop = () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    };
+
+    /* Bridges to component-level effects (which is where React requires hooks
+       to live): they use these to wake or pause a parked loop. */
+    restartRef.current = restart;
+    stopRef.current = stop;
+
+    restart();
 
     return () => {
-      cancelAnimationFrame(rafId);
+      stop();
+      restartRef.current = null;
+      stopRef.current = null;
       window.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseleave", handleMouseLeave);
     };
   }, [isReducedMotion]);
+
+  /* Progress changes arrive as MotionValue subscriptions on desktop and as a
+     prop on mobile. Either way, make sure the loop is running when progress
+     moves — the park above may have stopped it. */
+  useEffect(() => {
+    kickRef.current++;
+    restartRef.current?.();
+  }, [progress, progressSource]);
+
+  /* The silhouette sets the blob's target radii; once it lands, the path has to
+     be rebuilt even if the loop was parked. */
+  useEffect(() => {
+    if (!keyImageReady) return;
+    kickRef.current++;
+    restartRef.current?.();
+  }, [keyImageReady]);
+
+  /* Pause entirely while the page is hidden. Tab-switching otherwise left a
+     loop doing full path rebuilds that nobody could see. */
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.hidden) {
+        hiddenAtRef.current = performance.now();
+        stopRef.current?.();
+        return;
+      }
+      /* Any visible wake resumes the loop. Below the grace window we restart
+         without a kick: fewer than ~1s of hidden time means the idle-noise
+         phase has barely moved, so the parked frame is still (near enough)
+         correct and there was nothing to catch up on. */
+      kickRef.current += performance.now() - hiddenAtRef.current >= HIDDEN_PAUSE_MS ? 1 : 0;
+      restartRef.current?.();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
 
   /* Phase-linked intensities: lerp the *_ALIVE -> *_CALM constants with the
      mesh settle, clamped to SVG's 0..1 opacity range. React render values
@@ -1136,3 +1359,9 @@ const haloVioletAngRef = useRef(HALO_BLUE_REST_ANGLE + Math.PI);
     </svg>
   );
 }
+
+/* memo()'d: the blob's animation inputs deliberately bypass React (see
+   progressSource), so this component has no reason to re-render when anything
+   above it does. Wrapping it keeps AppContext-driven state changes elsewhere
+   from re-reconciling ~100 SVG nodes. */
+export const BlobMorph = memo(BlobMorphImpl);

@@ -4,10 +4,12 @@
  */
 "use client";
 
+import { memo } from "react";
+
 import { SectionWrapper } from "@/components/SectionWrapper";
 import { FlickerGroup } from "@/components/FlickerGroup";
 
-export function FormatSection() {
+function FormatSectionImpl() {
   return (
     <SectionWrapper id="format" title="Event Format">
       <div className="h-full w-full">
@@ -93,3 +95,10 @@ export function FormatSection() {
     </SectionWrapper>
   );
 }
+
+/* memo()'d so that state changes above these sections (AppContext, the sticky
+   key-resolved flag) don't re-reconcile their markup. The sections take no
+   props or only a boolean, so a shallow compare is enough — no custom
+   comparator, and no risk of stale closures since none of them close over
+   changing values. */
+export const FormatSection = memo(FormatSectionImpl);

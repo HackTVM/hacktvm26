@@ -428,8 +428,10 @@ body::after {
    a 2.4s cycle dipping only to 0.45 reads as a nudge rather than an alarm.
    Deliberately NOT reusing .animate-blink — that 1.5s dip to 0.3 is tuned to
    sit near a morphing blob the eye is already tracking, not to sit under
-   centred body copy. Applied to both the "click in" hint and the "in" glyph
-   itself, so the two pulse as one gesture. */
+   centred body copy. Carried by the "click in" hint alone: the "in" glyph it
+   points at is real copy the visitor has to be able to read, and pulsing it
+   only dimmed the one word that mattered. The hint quotes that word, so it
+   still reads as a gesture aimed at the actual target. */
 @keyframes pulse-hint {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.45; }

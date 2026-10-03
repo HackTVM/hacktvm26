@@ -15,7 +15,8 @@
  */
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { MotionValue } from "framer-motion";
 import { KEY_RIGID_PROGRESS } from "@/components/BlobMorph";
 
 export function useLatchedProgress(raw: number): number {
@@ -28,4 +29,43 @@ export function useLatchedProgress(raw: number): number {
   }
 
   return resolvedRef.current ? 1 : raw;
+}
+
+/**
+ * The same lock-in, as a STICKY BOOLEAN, for consumers that only need to know
+ * *whether* the key is resolved rather than the continuous progress value
+ * (KeyHitArea and KeySection both only ever test `progress >=
+ * KEY_RIGID_PROGRESS`).
+ *
+ * Why this exists: the desktop path used to feed `scrollYProgress` into React
+ * state via `useMotionValueEvent`, which re-rendered the entire experience tree
+ * on every scroll frame just to compute two booleans. Reading the MotionValue
+ * directly here means scroll updates never enter the React render path at all —
+ * this hook flips `true` at most ONCE per session, so `KeyHitArea` and
+ * `KeySection` re-render once instead of ~60x/second.
+ *
+ * BlobMorph still needs the continuous value, so it subscribes to the
+ * MotionValue itself (its physics loop already runs outside React).
+ */
+export function useLatchedKeyResolved(source: MotionValue<number>): boolean {
+  const [resolved, setResolved] = useState(() => source.get() >= KEY_RIGID_PROGRESS);
+  const latchedRef = useRef(resolved);
+
+  useEffect(() => {
+    /* Re-check on (re)subscribe: the MotionValue may already have passed the
+       threshold while this effect was torn down and rebuilt. */
+    if (latchedRef.current) return;
+    if (source.get() >= KEY_RIGID_PROGRESS) {
+      latchedRef.current = true;
+      setResolved(true);
+      return;
+    }
+    return source.on("change", (latest) => {
+      if (latchedRef.current || latest < KEY_RIGID_PROGRESS) return;
+      latchedRef.current = true;
+      setResolved(true);
+    });
+  }, [source]);
+
+  return latchedRef.current;
 }

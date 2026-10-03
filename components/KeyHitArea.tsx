@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { KEY_RIGID_PROGRESS, KEY_VISUAL_ID } from "@/components/BlobMorph";
+import { KEY_VISUAL_ID } from "@/components/BlobMorph";
 
 /**
  * HackTVM'26 — Access Point
@@ -36,8 +36,11 @@ export const KEY_HIT_AREA_ID = "key-hit-area";
  *   → size (53.56% × 45.90%), center (52.43%, 48.92%) of the SVG box.
  */
 interface KeyHitAreaProps {
-  /** Raw scroll progress 0.0 → 1.0 (same value fed to BlobMorph). */
-  progress: number;
+  /** Whether the key has fully resolved (progress >= KEY_RIGID_PROGRESS),
+      latched for the session. A boolean rather than the raw progress value:
+      this component never needed the continuous number, and taking it as a
+      boolean keeps scroll progress out of React entirely. */
+  isKeyResolved: boolean;
 }
 
 /** Three-stage mechanical click: drop, sit at the bottom, then click-pop back
@@ -53,7 +56,7 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
-export function KeyHitArea({ progress }: KeyHitAreaProps) {
+export function KeyHitArea({ isKeyResolved }: KeyHitAreaProps) {
   const {
     isTouchDevice,
     isReducedMotion,
@@ -65,8 +68,9 @@ export function KeyHitArea({ progress }: KeyHitAreaProps) {
   /* Armed whenever the key is resolved. Pre-latch that only happens on the key
      section (progress reaches KEY_RIGID_PROGRESS there and nowhere else); once
      latched, the resolved key replaces the blob on every section, so the hit
-     area stays live everywhere. */
-  const isActive = progress >= KEY_RIGID_PROGRESS;
+     area stays live everywhere. The latch itself lives upstream
+     (useLatchedKeyResolved). */
+  const isActive = isKeyResolved;
 
   /* Hint visibility: show after HINT_DELAY_MS once key is resolved,
      but never show again if user has already opened the modal once. */
@@ -133,7 +137,7 @@ export function KeyHitArea({ progress }: KeyHitAreaProps) {
         tabIndex={isActive ? 0 : -1}
         onClick={handleClick}
         className={[
-          "absolute -translate-x-1/2 -translate-y-1/2",
+          "cursor-pointer absolute -translate-x-1/2 -translate-y-1/2",
           "left-[52.43%] top-[48.92%]",
           "w-[calc(var(--blob-size)*0.5356)] h-[calc(var(--blob-size)*0.459)]",
           "min-w-12 min-h-12",

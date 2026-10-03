@@ -96,7 +96,7 @@ export function MobileExperience() {
       {/* Top 40% blob stage (positioned via .mobile-stage). */}
       <BlobStage className="mobile-stage">
         <BlobMorph progress={effectiveProgress} />
-        <KeyHitArea progress={effectiveProgress} />
+        <KeyHitArea isKeyResolved={isKeyResolved} />
       </BlobStage>
 
       {/* Bottom 60% beat content (fixed; pointer-events pass through) */}

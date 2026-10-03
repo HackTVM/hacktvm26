@@ -1,10 +1,10 @@
-import { useRef, useState } from "react";
-import { useScroll, useMotionValueEvent } from "framer-motion";
+import { useRef } from "react";
+import { useScroll } from "framer-motion";
 import { BlobMorph } from "@/components/BlobMorph";
 import { BlobStage } from "@/components/BlobStage";
 import { KeyHitArea } from "@/components/KeyHitArea";
 import { useActiveSection } from "@/hooks/useActiveSection";
-import { useLatchedProgress } from "@/hooks/useLatchedProgress";
+import { useLatchedKeyResolved } from "@/hooks/useLatchedProgress";
 import { OverviewSection } from "@/components/sections/OverviewSection";
 import { ThemeSection } from "@/components/sections/ThemeSection";
 import { FormatSection } from "@/components/sections/FormatSection";
@@ -15,21 +15,23 @@ import { AuroraBackground } from "@/components/AuroraBackground";
 export function DesktopExperience() {
   useActiveSection();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [progress, setProgress] = useState(0);
 
-  // Key-resolution lock-in: after the key fully resolves once, it replaces the
-  // blob on every section (effective progress stays at 1).
-  const effectiveProgress = useLatchedProgress(progress);
-
-  // Measure scroll progress inside the snap container (0.0 to 1.0)
+  // Scroll progress inside the snap container (0.0 to 1.0).
   const { scrollYProgress } = useScroll({
     container: containerRef,
   });
 
-  // Feed scroll updates directly into progress state
-  useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    setProgress(latest);
-  });
+  /* Progress deliberately never enters React state.
+     This used to be `useMotionValueEvent(scrollYProgress, "change", setProgress)`
+     feeding a `useState`, which re-rendered this component — and therefore
+     AuroraBackground, the whole BlobMorph SVG, KeyHitArea and all five
+     sections — on every scroll frame, ~60x/second, purely to derive two
+     booleans. BlobMorph subscribes to the MotionValue directly inside its
+     physics loop (outside React), and the two consumers below only need
+     `progress >= KEY_RIGID_PROGRESS`, so a sticky boolean is enough. Result:
+     zero React renders on scroll, and KeyHitArea/KeySection re-render once per
+     session instead of continuously. */
+  const isKeyResolved = useLatchedKeyResolved(scrollYProgress);
 
   return (
     <main className="relative h-screen w-full overflow-hidden bg-black text-white">
@@ -38,8 +40,8 @@ export function DesktopExperience() {
 
       {/* Fixed Blob overlay receiving real-time scroll progress. */}
       <BlobStage>
-        <BlobMorph progress={effectiveProgress} />
-        <KeyHitArea progress={effectiveProgress} />
+        <BlobMorph progressSource={scrollYProgress} />
+        <KeyHitArea isKeyResolved={isKeyResolved} />
       </BlobStage>
 
       {/* Scroll-snap container with containerRef attached */}
@@ -52,7 +54,7 @@ export function DesktopExperience() {
         <ThemeSection />
         <FormatSection />
         <TimelineSection />
-        <KeySection progress={effectiveProgress} />
+        <KeySection isKeyResolved={isKeyResolved} />
       </div>
     </main>
   );

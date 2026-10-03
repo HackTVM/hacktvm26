@@ -11,9 +11,10 @@
  * Entire phrase "everyone deserves a way in" is one line, one size.
  *
  * After 10s, if nobody has activated "in" yet, a slow-pulsing "click/tap 'in'"
- * hint fades in beneath the phrase and the "in" glyph itself picks up the same
- * pulse, so the two read as one gesture pointing at the actual target. That
- * hint is torn down the moment the screen is activated.
+ * hint appears beneath the phrase and points at the target by name. Only the
+ * hint pulses — "in" holds full opacity, because it is copy the visitor has to
+ * read rather than decoration. The hint is positioned absolutely and so never
+ * shifts the phrase, and it is torn down the moment the screen is activated.
  *
  * On activation (click / Enter / Space): everything fades out,
  * then setIsLoading(false) removes the overlay from the DOM.
@@ -79,11 +80,14 @@ export function LoadingScreen() {
         All words share the same text size.
         "in" is a real <button> — stronger glow + underline.
 
-        Column wrapper so the "click in" hint can sit under the phrase without
-        the phrase itself moving; the outer container still centres this as one
-        block.
+        The column is `relative` and holds the phrase as its only in-flow
+        child, so the overlay's `items-center` always centres the phrase and
+        nothing else. The hint below is absolutely positioned and therefore
+        contributes zero height — in flow it would grow this block at the 10s
+        mark and re-centre it, visibly jumping the phrase upward by half the
+        added height.
       */}
-      <div className="flex flex-col items-center gap-4 text-center">
+      <div className="relative flex flex-col items-center text-center">
         <p className="text-2xl sm:text-3xl text-cream text-glow select-none">
           {/* Flicker words — each appears independently, non-sequential order */}
           {FLICKER_WORDS.map(({ word, delay }) => (
@@ -97,8 +101,8 @@ export function LoadingScreen() {
           ))}
 
           {/* "in" — instantly visible, stronger glow, underline, focusable.
-              Gains the same slow pulse as the hint once it appears, so the eye
-              is told which word the hint is talking about. */}
+              Never pulses: it is the one word that has to stay readable at a
+              glance, and the hint below names it outright. */}
           <button
             type="button"
             onClick={handleActivate}
@@ -106,7 +110,6 @@ export function LoadingScreen() {
               "text-glow-strong underline decoration-cream/60",
               "cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-6",
               "focus-visible:outline-cream",
-              showHint ? "animate-pulse-hint" : "",
             ].join(" ")}
             aria-label="Enter HackTVM'26"
           >
@@ -115,12 +118,17 @@ export function LoadingScreen() {
         </p>
 
         {/* Affordance hint — appears after HINT_DELAY_MS, only if still here.
+            Absolute + top-full + mt-4: hangs 1rem below the phrase's bottom
+            edge without entering flow, so the phrase never moves. Pops in
+            already mid-pulse rather than fading — `pulse-hint` starts at
+            opacity 1 and dips, so there is no entry state to fade from.
             aria-hidden because the "in" button above is already a labelled,
             focusable control; this is redundant announcement. */}
         {showHint && (
           <p
             aria-hidden="true"
             className={[
+              "absolute left-1/2 top-full mt-4 -translate-x-1/2",
               "font-mono text-xs uppercase tracking-[0.2em] whitespace-nowrap",
               "text-cream/70 pointer-events-none select-none",
               "animate-pulse-hint",
