@@ -41,9 +41,9 @@ Open [http://localhost:3000](http://localhost:3000) to view it locally.
 
 ## Contact
 
-- 📧 [Mail: hackclubtvm@gmail.com](mailto:hackclubtvm@gmail.com)
-- 📷 [Instagram: @hacktvm](https://www.instagram.com/hacktvm/)
-- 🐙 [Github: HackTVM](https://github.com/hackTVM)
+-  [Mail: hackclubtvm@gmail.com](mailto:hackclubtvm@gmail.com)
+-  [Instagram: @hacktvm](https://www.instagram.com/hacktvm/)
+-  [Github: HackTVM](https://github.com/hackTVM)
 
 ---
 
