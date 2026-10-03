@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HackTVM '26 — Access Point
+
+> Everyone deserves a way in.
+
+The official site for **HackTVM '26**, the 2nd Edition of Trivandrum's first ever inter-school hackathon, run by The School of the Good Shepherd's [Hack Club TVM](https://github.com/hackTVM).
+
+---
+
+## About
+
+A single-page, scroll-driven story site built around **The Morph** — a persistent, physics-driven blob that gradually resolves into the event's key/logo shape as you scroll through five narrative phases: Overview, Theme, Format & Itinerary, Prizes & Judging, and The Key.
+
+Clicking the resolved key opens the event modal with a live countdown, brochure/hackbook downloads, and contact links.
+
+## Tech Stack
+
+- **Framework:** [Next.js](https://nextjs.org/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **Animation:** [Framer Motion](https://www.framer.com/motion/)
+- **Icons:** [lucide-react](https://lucide.dev/)
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Install dependencies
+npm install
+
+# Run the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view it locally.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Scroll-linked SVG blob morph, physics-driven and cursor-reactive
+- Five-phase narrative scroll with mobile-adapted beats
+- Key-click modal with live countdown, brochure/hackbook downloads, and social links
+- Responsive layout with fluid type and sizing (desktop + mobile)
+- Full `prefers-reduced-motion` support
+- Collapsible nav menu with links to event info pages
 
-## Learn More
+## Contact
 
-To learn more about Next.js, take a look at the following resources:
+- 📧 [hackclubtvm@gmail.com](mailto:hackclubtvm@gmail.com)
+- 📷 [Instagram](https://www.instagram.com/hacktvm/)
+- 🐙 [GitHub](https://github.com/hackTVM)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built by [Aaditey Nair](https://github.com/aaditeynair).
